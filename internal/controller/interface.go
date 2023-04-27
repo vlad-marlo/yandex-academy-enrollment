@@ -1,6 +1,10 @@
 package controller
 
-import "context"
+import (
+	"context"
+	"github.com/labstack/echo"
+	"github.com/vlad-marlo/yandex-academy-enrollment/internal/model"
+)
 
 type Interface interface {
 }
@@ -15,4 +19,5 @@ type Server interface {
 }
 
 type Service interface {
+	GetCourierByID(c echo.Context, id int) (*model.Courier, error)
 }

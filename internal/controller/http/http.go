@@ -12,6 +12,7 @@ type Controller struct {
 	engine           *echo.Echo
 	log              *zap.Logger
 	cfg              controller.Config
+	srv              controller.Service
 	rateCfg          mw.RateLimitConfig
 	routesConfigured bool
 }
