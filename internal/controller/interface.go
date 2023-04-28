@@ -2,12 +2,8 @@ package controller
 
 import (
 	"context"
-	"github.com/labstack/echo"
 	"github.com/vlad-marlo/yandex-academy-enrollment/internal/model"
 )
-
-type Interface interface {
-}
 
 type Config interface {
 	BindAddr() string
@@ -19,5 +15,6 @@ type Server interface {
 }
 
 type Service interface {
-	GetCourierByID(c echo.Context, id int) (*model.Courier, error)
+	GetCourierByID(ctx context.Context, id int) (*model.Courier, error)
+	CreateCouriers(ctx context.Context, request *model.CouriersCreateRequest) (*model.CouriersCreateResponse, error)
 }

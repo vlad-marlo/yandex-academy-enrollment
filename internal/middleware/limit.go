@@ -20,13 +20,13 @@ type RateLimitConfig interface {
 
 var (
 	// limiters are limiters for each endpoint with access by url path.
-	limiters map[string]*rate.Limiter
+	limiters = make(map[string]*rate.Limiter)
 	// rlmu is global rw mutex of RateLimiter mw.
 	rlmu sync.RWMutex
 )
 
 // RateLimiter add limit of RPS for every single route.
-func RateLimiter(cfg RateLimitConfig) func(next echo.HandlerFunc) echo.HandlerFunc {
+func RateLimiter(cfg RateLimitConfig) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			rlmu.RLock()

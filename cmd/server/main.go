@@ -21,8 +21,11 @@ func CreateApp() fx.Option {
 			echo.New,
 			fx.Annotate(http.New, fx.As(new(controller.Server))),
 			fx.Annotate(config.NewRateLimiterConfig, fx.As(new(middleware.RateLimitConfig))),
+			fx.Annotate(config.NewControllerConfig, fx.As(new(controller.Config))),
 		),
-		fx.Provide(RunServer),
+		fx.Invoke(
+			RunServer,
+		),
 	)
 }
 
