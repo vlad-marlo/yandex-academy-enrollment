@@ -2,10 +2,11 @@ package http
 
 import (
 	"context"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
+	echoSwagger "github.com/swaggo/echo-swagger"
+	_ "github.com/vlad-marlo/yandex-academy-enrollment/docs"
 	"github.com/vlad-marlo/yandex-academy-enrollment/internal/controller"
 	mw "github.com/vlad-marlo/yandex-academy-enrollment/internal/middleware"
-	"go.uber.org/multierr"
 	"go.uber.org/zap"
 )
 
@@ -18,18 +19,17 @@ type Controller struct {
 }
 
 func New(
-	engine *echo.Echo,
 	logger *zap.Logger,
 	cfg controller.Config,
 	rateCfg mw.RateLimitConfig,
 ) (*Controller, error) {
 	srv := &Controller{
-		engine:  engine,
+		engine:  echo.New(),
 		log:     logger,
 		cfg:     cfg,
 		rateCfg: rateCfg,
 	}
-	if engine == nil || logger == nil || cfg == nil || rateCfg == nil {
+	if logger == nil || cfg == nil || rateCfg == nil {
 		return nil, ErrNilReference
 	}
 	srv.configure()
@@ -44,6 +44,7 @@ func (srv *Controller) configureMW() {
 }
 
 func (srv *Controller) configureRoutes() {
+	srv.engine.GET("/swagger/*", echoSwagger.WrapHandler)
 	srv.engine.GET("/ping", srv.HandlePing)
 	couriers := srv.engine.Group("/couriers")
 	couriers.GET("/:courier_id", srv.HandleGetCourier, mw.Paginator)
@@ -55,10 +56,12 @@ func (srv *Controller) configure() {
 	srv.configureRoutes()
 }
 
-func (srv *Controller) Start(context.Context) (err error) {
+func (srv *Controller) Start(context.Context) error {
+	go func() {
+		srv.log.Error("starting http server", zap.Error(srv.engine.Start(srv.cfg.BindAddr())))
+	}()
 	srv.log.Info("starting http server", zap.String("bind_addr", srv.cfg.BindAddr()))
-	go multierr.AppendInto(&err, srv.engine.Start(srv.cfg.BindAddr()))
-	return
+	return nil
 }
 
 func (srv *Controller) Stop(ctx context.Context) error {

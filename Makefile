@@ -6,6 +6,8 @@ build:
 
 .PHONY: gen
 gen:
+	swag fmt
+	swag init --d cmd/server/,internal/controller/http/,internal/model/
 	go generate ./...
 
 .PHONY: test
@@ -14,7 +16,7 @@ test:
 
 .PHONY: c
 c:
-	go tool cover -func coverate.out
+	go tool cover -func coverage.out
 
 .PHONY: lines
 lines:

@@ -1,0 +1,82 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Yandex Lavka",
+        "contact": {},
+        "version": "1.0"
+    },
+    "paths": {
+        "/couriers/{courier_id}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Создание пользователя",
+                "operationId": "courier_get",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Courier identifier",
+                        "name": "courier_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.Courier"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.Error"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "model.Courier": {
+            "type": "object",
+            "properties": {
+                "courier_id": {
+                    "type": "integer"
+                },
+                "courier_type": {
+                    "type": "string"
+                },
+                "regions": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "working_hours": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.TimeInterval"
+                    }
+                }
+            }
+        },
+        "model.Error": {
+            "type": "object"
+        },
+        "model.TimeInterval": {
+            "type": "object"
+        }
+    }
+}

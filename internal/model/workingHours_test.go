@@ -3,36 +3,101 @@ package model
 import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
-func TestParseWorkingHours(t *testing.T) {
-	var sh, eh, sm, em uint8
-	for sh = 0; sh <= maxHourValue+1; sh += 3 {
-		for eh = 0; eh <= maxHourValue+1; eh += 3 {
-			for sm = 0; sm <= maxMinuteValue+1; sm += 3 {
-				for em = 0; sm <= maxMinuteValue+1; em += 3 {
-					h, err := ParseWorkingHours(fmt.Sprintf("%d:%d-%d:%d", sh, sm, eh, em))
-					if err == nil {
-						if assert.NotNil(t, h) {
-							assert.Equal(t, eh, h.end.hour)
-							assert.Equal(t, em, h.end.minute)
-							assert.Equal(t, sm, h.start.minute)
-							assert.Equal(t, sh, h.start.hour)
-						}
-					} else {
-						assert.ErrorIs(t, err, ErrBadWorkingHours)
-					}
-				}
-
-			}
-		}
+var (
+	TestTimeInterval = &TimeInterval{
+		start: Time{
+			hour:   11,
+			minute: 12,
+		},
+		end: Time{
+			hour:   22,
+			minute: 33,
+		},
+		reverse: false,
 	}
-	h, err := ParseWorkingHours("2:22-22:21")
-	if assert.NoError(t, err) && assert.NotNil(t, h) {
-		assert.Equal(t, uint8(22), h.end.hour)
-		assert.Equal(t, uint8(21), h.end.minute)
-		assert.Equal(t, uint8(2), h.start.hour)
-		assert.Equal(t, uint8(22), h.start.minute)
+)
+
+func TestParseWorkingHours_OK_NonReversed(t *testing.T) {
+	var startH, startM, endH, endM uint8 = 12, 59, 23, 33
+	h, err := ParseWorkingHours(fmt.Sprintf("%d:%d-%d:%d", startH, startM, endH, endM))
+	assert.NoError(t, err)
+	if assert.NotNil(t, h) {
+		assert.Equal(t, startH, h.start.hour)
+		assert.Equal(t, startM, h.start.minute)
+		assert.Equal(t, endH, h.end.hour)
+		assert.Equal(t, endM, h.end.minute)
+		assert.False(t, h.reverse)
+	}
+}
+
+func TestParseWorkingHours_OK_Reversed(t *testing.T) {
+	var endH, endM, startH, startM uint8 = 12, 59, 23, 33
+	h, err := ParseWorkingHours(fmt.Sprintf("%d:%d-%d:%d", startH, startM, endH, endM))
+	assert.NoError(t, err)
+	if assert.NotNil(t, h) {
+		assert.Equal(t, startH, h.start.hour)
+		assert.Equal(t, startM, h.start.minute)
+		assert.Equal(t, endH, h.end.hour)
+		assert.Equal(t, endM, h.end.minute)
+		assert.True(t, h.reverse)
+	}
+}
+
+func TestParseWorkingHours_BadData(t *testing.T) {
+	t.Run("bad format", func(t *testing.T) {
+		h, err := ParseWorkingHours("bad string")
+		assert.Nil(t, h)
+		if assert.Error(t, err) {
+			assert.ErrorIs(t, err, ErrBadWorkingHours)
+		}
+	})
+	t.Run("bad start time", func(t *testing.T) {
+		h, err := ParseWorkingHours("bad time-12:23")
+		assert.Nil(t, h)
+		if assert.Error(t, err) {
+			assert.ErrorIs(t, err, ErrBadWorkingHours)
+		}
+	})
+	t.Run("bad end time", func(t *testing.T) {
+		h, err := ParseWorkingHours("12:23-bad time")
+		assert.Nil(t, h)
+		if assert.Error(t, err) {
+			assert.ErrorIs(t, err, ErrBadWorkingHours)
+		}
+	})
+}
+
+func TestTimeInterval_String_Parsable(t *testing.T) {
+	h, err := ParseWorkingHours(TestTimeInterval.String())
+	assert.NoError(t, err)
+	if assert.NotNil(t, h) {
+		assert.Equal(t, TestTimeInterval, h)
+	}
+}
+
+func TestTimeInterval_MarshalJSON_Parsable(t *testing.T) {
+	var h *TimeInterval
+
+	data, err := TestTimeInterval.MarshalJSON()
+	require.NoError(t, err)
+
+	h, err = ParseWorkingHours(string(data))
+	assert.NoError(t, err)
+	if assert.NotNil(t, h) {
+		assert.Equal(t, TestTimeInterval, h)
+	}
+}
+
+func TestTimeInterval_UnmarshalJSON(t *testing.T) {
+	h := new(TimeInterval)
+
+	err := h.UnmarshalJSON([]byte(fmt.Sprintf("\"%s\"", TestTimeInterval)))
+	assert.NoError(t, err)
+	if assert.NotNil(t, h) {
+		assert.Equal(t, TestTimeInterval, h)
 	}
 }

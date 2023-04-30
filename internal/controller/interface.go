@@ -15,6 +15,6 @@ type Server interface {
 }
 
 type Service interface {
-	GetCourierByID(ctx context.Context, id int) (*model.Courier, error)
+	GetCourierByID(ctx context.Context, id int) (*model.CourierDTO, error)
 	CreateCouriers(ctx context.Context, request *model.CouriersCreateRequest) (*model.CouriersCreateResponse, error)
 }

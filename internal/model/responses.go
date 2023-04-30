@@ -1,3 +1,6 @@
 package model
 
-type CouriersCreateResponse []Courier
+type (
+	CouriersCreateResponse []CourierDTO
+	Error                  struct{}
+)

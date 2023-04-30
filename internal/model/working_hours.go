@@ -71,6 +71,7 @@ func ParseWorkTime(raw string) (w Time, err error) {
 // Only error that can be returned from this function is ErrBadWorkingHours of child
 // error of itself.
 func ParseWorkingHours(raw string) (h *TimeInterval, err error) {
+	raw = strings.Trim(raw, "\"")
 	hours := strings.Split(raw, "-")
 	if len(hours) != 2 {
 		return nil, ErrBadWorkingHours
@@ -105,10 +106,12 @@ func (h *TimeInterval) TimeIn(t time.Time) bool {
 	}.In(h)
 }
 
+// MarshalJSON makes available to represent time interval in JSON format which is parsable back to TimeInterval obj.
 func (h *TimeInterval) MarshalJSON() ([]byte, error) {
 	return json.Marshal(h.String())
 }
 
+// UnmarshalJSON makes available to parse TimeInterval from JSON representation format.
 func (h *TimeInterval) UnmarshalJSON(data []byte) error {
 	var raw string
 	if err := json.Unmarshal(data, &raw); err != nil {

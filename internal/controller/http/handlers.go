@@ -1,9 +1,8 @@
 package http
 
 import (
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/vlad-marlo/yandex-academy-enrollment/internal/model"
-	"go.uber.org/zap"
 	"net/http"
 	"strconv"
 )
@@ -12,17 +11,19 @@ func (srv *Controller) HandlePing(c echo.Context) error {
 	return c.String(http.StatusOK, "pong")
 }
 
+// HandleGetCourier returns courier with provided id.
+//
+//	@Tags		User
+//	@Summary	Создание пользователя
+//	@ID			courier_get
+//	@Accept		json
+//	@Produce	json
+//	@Param		courier_id	path		int	true	"CourierDTO identifier"
+//	@Success	201			{object}	model.CouriersCreateResponse
+//	@Failure	400			{object}	model.Error
+//	@Router		/couriers/{courier_id} [get]
 func (srv *Controller) HandleGetCourier(c echo.Context) error {
-	var courier *model.Courier
-
-	defer func() {
-		if err := c.Request().Body.Close(); err != nil {
-			srv.log.Warn(
-				"error was occurred while closing request body in get courier by id handler",
-				zap.Error(err),
-			)
-		}
-	}()
+	var courier *model.CourierDTO
 
 	sID := c.Param("courier_id")
 	id, err := strconv.Atoi(sID)
