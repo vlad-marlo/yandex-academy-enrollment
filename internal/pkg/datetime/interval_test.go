@@ -92,7 +92,7 @@ func TestTimeInterval_MarshalJSON_Parsable(t *testing.T) {
 	}
 }
 
-func TestTimeInterval_UnmarshalJSON(t *testing.T) {
+func TestTimeInterval_UnmarshalJSON_Positive(t *testing.T) {
 	h := new(TimeInterval)
 
 	err := h.UnmarshalJSON([]byte(fmt.Sprintf("\"%s\"", TestTimeInterval)))
@@ -100,4 +100,18 @@ func TestTimeInterval_UnmarshalJSON(t *testing.T) {
 	if assert.NotNil(t, h) {
 		assert.Equal(t, TestTimeInterval, h)
 	}
+}
+
+func TestTimeInterval_UnmarshalJSON_Negative_BadFormat(t *testing.T) {
+	h := new(TimeInterval)
+
+	err := h.UnmarshalJSON([]byte("{"))
+	assert.Error(t, err)
+}
+
+func TestTimeInterval_UnmarshalJSON_Negative_BadTime(t *testing.T) {
+	h := new(TimeInterval)
+
+	err := h.UnmarshalJSON([]byte("\"12:22:22-22\""))
+	assert.Error(t, err)
 }
