@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -19,8 +20,7 @@ const (
 	October
 	November
 	December
-	maxDay   = 31
-	maxMonth = 12
+	maxDay = 31
 )
 
 type Date struct {
@@ -29,6 +29,17 @@ type Date struct {
 	day   int
 }
 
+func Today() (d *Date) {
+	d = new(Date)
+	var month time.Month
+	d.year, month, d.day = time.Now().In(time.UTC).Date()
+	d.month = int(month)
+	return
+}
+
+// ParseDate parses date from raw string.
+//
+// Date must be in format YEAR-MONTH-DAY
 func ParseDate(raw string) (d *Date, err error) {
 	d = new(Date)
 	split := strings.Split(raw, "-")

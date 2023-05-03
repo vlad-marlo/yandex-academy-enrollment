@@ -1,11 +1,11 @@
 package http
 
 import (
+	"github.com/asaskevich/govalidator"
 	"github.com/labstack/echo/v4"
 	mw "github.com/vlad-marlo/yandex-academy-enrollment/internal/middleware"
 	"github.com/vlad-marlo/yandex-academy-enrollment/internal/model"
 	"net/http"
-	"strconv"
 )
 
 func (srv *Controller) HandlePing(c echo.Context) error {
@@ -24,14 +24,8 @@ func (srv *Controller) HandlePing(c echo.Context) error {
 //	@Failure	404			{object}	model.BadRequestResponse	"Not Found"
 //	@Router		/couriers/{courier_id} [get]
 func (srv *Controller) HandleGetCourier(c echo.Context) error {
-	var courier *model.CourierDTO
-
-	sID := c.Param("courier_id")
-	id, err := strconv.Atoi(sID)
-	if err != nil {
-		return c.JSON(http.StatusNotFound, nil)
-	}
-	courier, err = srv.srv.GetCourierByID(c.Request().Context(), id)
+	id := c.Param("courier_id")
+	courier, err := srv.srv.GetCourierByID(c.Request().Context(), id)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, nil)
 	}
@@ -73,6 +67,9 @@ func (srv *Controller) HandleCreateCouriers(c echo.Context) error {
 	if err := c.Bind(&request); err != nil {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
+	if ok, _ := govalidator.ValidateStruct(request); !ok {
+		return c.JSON(http.StatusBadRequest, nil)
+	}
 	resp, err := srv.srv.CreateCouriers(c.Request().Context(), &request)
 	if err != nil {
 		return srv.checkErr(c, err)
@@ -94,13 +91,16 @@ func (srv *Controller) HandleCreateCouriers(c echo.Context) error {
 //	@Router		/couriers/meta-info/{courier_id} [get]
 func (srv *Controller) HandleGetCourierMetaInfo(c echo.Context) error {
 	var req *model.GetCourierMetaInfoRequest
+
 	if err := c.Bind(req); err != nil {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
+
 	resp, err := srv.srv.GetCourierMetaInfo(c.Request().Context(), req)
 	if err != nil {
 		return srv.checkErr(c, err)
 	}
+
 	return c.JSON(http.StatusOK, resp)
 }
 
@@ -116,7 +116,20 @@ func (srv *Controller) HandleGetCourierMetaInfo(c echo.Context) error {
 //	@Failure	400			{object}	model.BadRequestResponse	"Bad Request"
 //	@Router		/couriers/assignments [get]
 func (srv *Controller) HandleGetOrdersAssign(c echo.Context) error {
-	return nil
+	date, err := srv.dateFromContext(c, "date")
+	if err != nil {
+		return srv.checkErr(c, err)
+	}
+
+	var resp *model.OrderAssignResponse
+
+	rawID := c.QueryParam("courier_id")
+	resp, err = srv.srv.GetOrdersAssign(c.Request().Context(), date, rawID)
+	if err != nil {
+		return srv.checkErr(c, err)
+	}
+
+	return c.JSON(http.StatusOK, resp)
 }
 
 // HandleGetOrder return courier with provided id.
@@ -131,7 +144,12 @@ func (srv *Controller) HandleGetOrdersAssign(c echo.Context) error {
 //	@Failure	404			{object}	model.BadRequestResponse	"Not Found"
 //	@Router		/orders/{order_id} [get]
 func (srv *Controller) HandleGetOrder(c echo.Context) error {
-	panic("not implemented")
+	id := c.Param("order_id")
+	resp, err := srv.srv.GetOrderByID(c.Request().Context(), id)
+	if err != nil {
+		return srv.checkErr(c, err)
+	}
+	return c.JSON(http.StatusOK, resp)
 }
 
 // HandleGetOrders return courier with provided id.
@@ -146,7 +164,12 @@ func (srv *Controller) HandleGetOrder(c echo.Context) error {
 //	@Failure	400		{object}	model.BadRequestResponse	"Bad Request"
 //	@Router		/orders/ [get]
 func (srv *Controller) HandleGetOrders(c echo.Context) error {
-	panic("not implemented")
+	opts := mw.GetPaginationOptsFromRequest(c)
+	resp, err := srv.srv.GetOrders(c.Request().Context(), opts)
+	if err != nil {
+		return srv.checkErr(c, err)
+	}
+	return c.JSON(http.StatusOK, resp)
 }
 
 // HandleCreateOrders creates provided orders.
@@ -160,7 +183,15 @@ func (srv *Controller) HandleGetOrders(c echo.Context) error {
 //	@Failure	400		{object}	model.BadRequestResponse	"Bad Request"
 //	@Router		/orders/ [post]
 func (srv *Controller) HandleCreateOrders(c echo.Context) error {
-	panic("not implemented")
+	req := new(model.CreateOrderRequest)
+	if err := c.Bind(req); err != nil {
+		return srv.checkErr(c, err)
+	}
+	resp, err := srv.srv.CreateOrders(c.Request().Context(), req)
+	if err != nil {
+		return srv.checkErr(c, err)
+	}
+	return c.JSON(http.StatusOK, resp)
 }
 
 // HandleCompleteOrders completes provided orders.
@@ -176,7 +207,15 @@ func (srv *Controller) HandleCreateOrders(c echo.Context) error {
 //	@Failure	400		{object}	model.BadRequestResponse	"Bad Request"
 //	@Router		/orders/complete [post]
 func (srv *Controller) HandleCompleteOrders(c echo.Context) error {
-	panic("not implemented")
+	req := new(model.CompleteOrderRequest)
+	if err := c.Bind(req); err != nil {
+		return srv.checkErr(c, err)
+	}
+	resp, err := srv.srv.CompleteOrders(c.Request().Context(), req)
+	if err != nil {
+		return srv.checkErr(c, err)
+	}
+	return c.JSON(http.StatusOK, resp)
 }
 
 // HandleAssignOrders assigns orders.
@@ -186,9 +225,19 @@ func (srv *Controller) HandleCompleteOrders(c echo.Context) error {
 //	@Accept		json
 //	@Produce	json
 //	@Param		date	query		string						false	"Дата распределения заказов. Если не указана, то используется текущий день"
-//	@Success	200		{object}	model.OrderAssignResponse	"OK"
+//	@Success	201		{object}	model.OrderAssignResponse	"OK"
 //	@Failure	400		{object}	model.BadRequestResponse	"Bad Request"
 //	@Router		/orders/assign [post]
 func (srv *Controller) HandleAssignOrders(c echo.Context) error {
-	panic("not implemented")
+	date, err := srv.dateFromContext(c, "date")
+	if err != nil {
+		return srv.checkErr(c, err)
+	}
+
+	var resp *model.OrderAssignResponse
+	resp, err = srv.srv.AssignOrders(c.Request().Context(), date)
+	if err != nil {
+		return srv.checkErr(c, err)
+	}
+	return c.JSON(http.StatusCreated, resp)
 }

@@ -11,6 +11,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	middleware "github.com/vlad-marlo/yandex-academy-enrollment/internal/middleware"
 	model "github.com/vlad-marlo/yandex-academy-enrollment/internal/model"
+	datetime "github.com/vlad-marlo/yandex-academy-enrollment/internal/pkg/datetime"
 )
 
 // MockConfig is a mock of Config interface.
@@ -124,6 +125,36 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 	return m.recorder
 }
 
+// AssignOrders mocks base method.
+func (m *MockService) AssignOrders(ctx context.Context, date *datetime.Date) (*model.OrderAssignResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AssignOrders", ctx, date)
+	ret0, _ := ret[0].(*model.OrderAssignResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AssignOrders indicates an expected call of AssignOrders.
+func (mr *MockServiceMockRecorder) AssignOrders(ctx, date interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AssignOrders", reflect.TypeOf((*MockService)(nil).AssignOrders), ctx, date)
+}
+
+// CompleteOrders mocks base method.
+func (m *MockService) CompleteOrders(ctx context.Context, req *model.CompleteOrderRequest) ([]*model.OrderDTO, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CompleteOrders", ctx, req)
+	ret0, _ := ret[0].([]*model.OrderDTO)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CompleteOrders indicates an expected call of CompleteOrders.
+func (mr *MockServiceMockRecorder) CompleteOrders(ctx, req interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteOrders", reflect.TypeOf((*MockService)(nil).CompleteOrders), ctx, req)
+}
+
 // CreateCouriers mocks base method.
 func (m *MockService) CreateCouriers(ctx context.Context, request *model.CreateCourierRequest) (*model.CouriersCreateResponse, error) {
 	m.ctrl.T.Helper()
@@ -139,8 +170,23 @@ func (mr *MockServiceMockRecorder) CreateCouriers(ctx, request interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCouriers", reflect.TypeOf((*MockService)(nil).CreateCouriers), ctx, request)
 }
 
+// CreateOrders mocks base method.
+func (m *MockService) CreateOrders(ctx context.Context, req *model.CreateOrderRequest) ([]*model.OrderDTO, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateOrders", ctx, req)
+	ret0, _ := ret[0].([]*model.OrderDTO)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateOrders indicates an expected call of CreateOrders.
+func (mr *MockServiceMockRecorder) CreateOrders(ctx, req interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrders", reflect.TypeOf((*MockService)(nil).CreateOrders), ctx, req)
+}
+
 // GetCourierByID mocks base method.
-func (m *MockService) GetCourierByID(ctx context.Context, id int) (*model.CourierDTO, error) {
+func (m *MockService) GetCourierByID(ctx context.Context, id string) (*model.CourierDTO, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCourierByID", ctx, id)
 	ret0, _ := ret[0].(*model.CourierDTO)
@@ -182,4 +228,49 @@ func (m *MockService) GetCouriers(ctx context.Context, opts *middleware.Paginati
 func (mr *MockServiceMockRecorder) GetCouriers(ctx, opts interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCouriers", reflect.TypeOf((*MockService)(nil).GetCouriers), ctx, opts)
+}
+
+// GetOrderByID mocks base method.
+func (m *MockService) GetOrderByID(ctx context.Context, id string) (*model.OrderDTO, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrderByID", ctx, id)
+	ret0, _ := ret[0].(*model.OrderDTO)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrderByID indicates an expected call of GetOrderByID.
+func (mr *MockServiceMockRecorder) GetOrderByID(ctx, id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderByID", reflect.TypeOf((*MockService)(nil).GetOrderByID), ctx, id)
+}
+
+// GetOrders mocks base method.
+func (m *MockService) GetOrders(ctx context.Context, opts *middleware.PaginationOpts) ([]*model.OrderDTO, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrders", ctx, opts)
+	ret0, _ := ret[0].([]*model.OrderDTO)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrders indicates an expected call of GetOrders.
+func (mr *MockServiceMockRecorder) GetOrders(ctx, opts interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrders", reflect.TypeOf((*MockService)(nil).GetOrders), ctx, opts)
+}
+
+// GetOrdersAssign mocks base method.
+func (m *MockService) GetOrdersAssign(ctx context.Context, date *datetime.Date, id string) (*model.OrderAssignResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrdersAssign", ctx, date, id)
+	ret0, _ := ret[0].(*model.OrderAssignResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrdersAssign indicates an expected call of GetOrdersAssign.
+func (mr *MockServiceMockRecorder) GetOrdersAssign(ctx, date, id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrdersAssign", reflect.TypeOf((*MockService)(nil).GetOrdersAssign), ctx, date, id)
 }
