@@ -47,8 +47,13 @@ func (srv *Controller) configureRoutes() {
 	srv.engine.GET("/swagger/*", echoSwagger.WrapHandler)
 	srv.engine.GET("/ping", srv.HandlePing)
 	couriers := srv.engine.Group("/couriers")
-	couriers.GET("/:courier_id", srv.HandleGetCourier, mw.Paginator)
-	couriers.POST("/", srv.HandleCreateCouriers)
+	{
+		couriers.GET("/:courier_id", srv.HandleGetCourier)
+		couriers.GET("/", srv.HandleGetCouriers)
+		couriers.POST("/", srv.HandleCreateCouriers)
+		couriers.GET("/meta-info/:courier_id", srv.HandleGetCourierMetaInfo)
+		couriers.GET("/assignments", srv.HandleGetOrdersAssign)
+	}
 }
 
 func (srv *Controller) configure() {

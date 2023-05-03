@@ -16,6 +16,9 @@ func main() {
 	fx.New(CreateApp()).Run()
 }
 
+// CreateApp prepares fx options to run server.
+//
+// This makes available to test is configuration correct.
 func CreateApp() fx.Option {
 	return fx.Options(
 		fx.Provide(
@@ -30,6 +33,7 @@ func CreateApp() fx.Option {
 	)
 }
 
+// RunServer is helper function to configure server.
 func RunServer(lc fx.Lifecycle, server controller.Server) {
 	lc.Append(fx.Hook{
 		OnStart: server.Start,

@@ -20,11 +20,32 @@ type PaginationOpts struct {
 	offset int
 }
 
+func NewPaginationOpts(limit, offset string) (opts *PaginationOpts) {
+	opts = &PaginationOpts{
+		limit:  1,
+		offset: 0,
+	}
+	var err error
+	if limit != "" {
+		opts.limit, err = strconv.Atoi(limit)
+		if err != nil {
+			opts.limit = 1
+		}
+	}
+	if offset != "" {
+		opts.offset, err = strconv.Atoi(offset)
+		if err != nil {
+			opts.offset = 0
+		}
+	}
+	return opts
+}
+
 // Limit is limit getter.
 func (opts *PaginationOpts) Limit() int {
 	if opts == nil {
 		zap.L().Warn("unexpected got nil pagination opts")
-		return 0
+		return 1
 	}
 	return opts.limit
 }
@@ -42,18 +63,7 @@ func (opts *PaginationOpts) Offset() int {
 // with defaults if not respectively.
 func Paginator(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		var err error
-		opts := new(PaginationOpts)
-		opts.limit = 1 // setting up default limit
-		opts.offset, err = strconv.Atoi(c.QueryParam(queryOffsetParamName))
-		if err != nil {
-			RequestWithPaginationOpts(c, opts)
-			return next(c)
-		}
-		opts.limit, err = strconv.Atoi(c.QueryParam(queryLimitParamName))
-		if err != nil {
-			return next(c)
-		}
+		opts := NewPaginationOpts(c.QueryParam(queryLimitParamName), c.QueryParam(queryOffsetParamName))
 		RequestWithPaginationOpts(c, opts)
 		return next(c)
 	}

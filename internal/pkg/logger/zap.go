@@ -2,11 +2,10 @@ package logger
 
 import "go.uber.org/zap"
 
-func New() (*zap.Logger, error) {
-	l, err := zap.NewProduction()
-	if err != nil {
-		return nil, err
-	}
+// New prepares new zap logger and replacing global logger with newly initialized.
+func New(opts ...zap.Option) (*zap.Logger, error) {
+	l, _ := zap.NewProduction(opts...)
+
 	l.Info("replacing global logger")
 	zap.ReplaceGlobals(l)
 	return l, nil

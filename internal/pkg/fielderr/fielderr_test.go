@@ -82,5 +82,7 @@ func TestError_With(t *testing.T) {
 }
 
 func TestError_Code(t *testing.T) {
+	err := &Error{code: CodeInternal}
 	assert.Equal(t, 0, (*Error)(nil).Code())
+	assert.Equal(t, err.code, err.Code())
 }

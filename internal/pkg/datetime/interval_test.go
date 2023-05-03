@@ -1,4 +1,4 @@
-package model
+package datetime
 
 import (
 	"fmt"
@@ -21,9 +21,9 @@ var (
 	}
 )
 
-func TestParseWorkingHours_OK_NonReversed(t *testing.T) {
+func TestParseTimeInterval_OK_NonReversed(t *testing.T) {
 	var startH, startM, endH, endM uint8 = 12, 59, 23, 33
-	h, err := ParseWorkingHours(fmt.Sprintf("%d:%d-%d:%d", startH, startM, endH, endM))
+	h, err := ParseTimeInterval(fmt.Sprintf("%d:%d-%d:%d", startH, startM, endH, endM))
 	assert.NoError(t, err)
 	if assert.NotNil(t, h) {
 		assert.Equal(t, startH, h.start.hour)
@@ -34,9 +34,9 @@ func TestParseWorkingHours_OK_NonReversed(t *testing.T) {
 	}
 }
 
-func TestParseWorkingHours_OK_Reversed(t *testing.T) {
+func TestParseTimeInterval_OK_Reversed(t *testing.T) {
 	var endH, endM, startH, startM uint8 = 12, 59, 23, 33
-	h, err := ParseWorkingHours(fmt.Sprintf("%d:%d-%d:%d", startH, startM, endH, endM))
+	h, err := ParseTimeInterval(fmt.Sprintf("%d:%d-%d:%d", startH, startM, endH, endM))
 	assert.NoError(t, err)
 	if assert.NotNil(t, h) {
 		assert.Equal(t, startH, h.start.hour)
@@ -47,23 +47,23 @@ func TestParseWorkingHours_OK_Reversed(t *testing.T) {
 	}
 }
 
-func TestParseWorkingHours_BadData(t *testing.T) {
+func TestParseTimeInterval_BadData(t *testing.T) {
 	t.Run("bad format", func(t *testing.T) {
-		h, err := ParseWorkingHours("bad string")
+		h, err := ParseTimeInterval("bad string")
 		assert.Nil(t, h)
 		if assert.Error(t, err) {
 			assert.ErrorIs(t, err, ErrBadWorkingHours)
 		}
 	})
 	t.Run("bad start time", func(t *testing.T) {
-		h, err := ParseWorkingHours("bad time-12:23")
+		h, err := ParseTimeInterval("bad time-12:23")
 		assert.Nil(t, h)
 		if assert.Error(t, err) {
 			assert.ErrorIs(t, err, ErrBadWorkingHours)
 		}
 	})
 	t.Run("bad end time", func(t *testing.T) {
-		h, err := ParseWorkingHours("12:23-bad time")
+		h, err := ParseTimeInterval("12:23-bad time")
 		assert.Nil(t, h)
 		if assert.Error(t, err) {
 			assert.ErrorIs(t, err, ErrBadWorkingHours)
@@ -72,7 +72,7 @@ func TestParseWorkingHours_BadData(t *testing.T) {
 }
 
 func TestTimeInterval_String_Parsable(t *testing.T) {
-	h, err := ParseWorkingHours(TestTimeInterval.String())
+	h, err := ParseTimeInterval(TestTimeInterval.String())
 	assert.NoError(t, err)
 	if assert.NotNil(t, h) {
 		assert.Equal(t, TestTimeInterval, h)
@@ -85,7 +85,7 @@ func TestTimeInterval_MarshalJSON_Parsable(t *testing.T) {
 	data, err := TestTimeInterval.MarshalJSON()
 	require.NoError(t, err)
 
-	h, err = ParseWorkingHours(string(data))
+	h, err = ParseTimeInterval(string(data))
 	assert.NoError(t, err)
 	if assert.NotNil(t, h) {
 		assert.Equal(t, TestTimeInterval, h)
