@@ -18,10 +18,7 @@ const (
 )
 
 // Time is time implementation with underlying hour and minute
-type Time struct {
-	hour   uint8
-	minute uint8
-}
+type Time int
 
 // ParseTime parses time in HH:MM format from string.
 //
@@ -52,17 +49,16 @@ func ParseTime(raw string) (w Time, err error) {
 		return w, ErrBadWorkingHours
 	}
 
-	w.hour = uint8(hour)
-	w.minute = uint8(minute)
+	w = w.Add(hour*60 + minute)
 	return w, nil
 }
 
 // In return is time in interval or not.
 func (t Time) In(h *TimeInterval) bool {
 	if h.reverse {
-		return (h.start.Less(t) && !(t.Less(h.end))) || t.Less(h.end)
+		return t >= h.start || t <= h.end
 	}
-	return t.Less(h.end) && h.start.Less(t)
+	return t >= h.start && t <= h.end
 }
 
 // String returns string representation of time.
@@ -70,44 +66,35 @@ func (t Time) In(h *TimeInterval) bool {
 // Time will be in format HH:MM and must be parsable back to Time object from string.
 func (t Time) String() string {
 	var hour, minute string
-	if t.hour < 10 {
-		hour = fmt.Sprintf("0%d", t.hour)
+	h, m := t.Hour(), t.Minute()
+	if h < 10 {
+		hour = fmt.Sprintf("0%d", h)
 	} else {
-		hour = fmt.Sprint(t.hour)
+		hour = fmt.Sprint(h)
 	}
-	if t.minute < 10 {
-		minute = fmt.Sprintf("0%d", t.minute)
+	if m < 10 {
+		minute = fmt.Sprintf("0%d", m)
 	} else {
-		minute = fmt.Sprint(t.minute)
+		minute = fmt.Sprint(m)
 	}
 	return fmt.Sprintf("%s:%s", hour, minute)
 }
 
 // Hour is hour accessor.
-func (t Time) Hour() uint8 {
-	return t.hour
+func (t Time) Hour() int {
+	return int(t) / 60
 }
 
 // Minute is minute accessor.
-func (t Time) Minute() uint8 {
-	return t.minute
+func (t Time) Minute() int {
+	return int(t) % 60
 }
 
 // Less is helper comparator function.
 func (t Time) Less(other Time) bool {
-	if t.hour == other.hour {
-		return t.minute < other.minute
-	}
-	return t.hour < other.hour
+	return t < other
 }
 
-func (t Time) Add(minutes uint8) Time {
-	res := Time{
-		minute: (t.minute + minutes) % 60,
-		hour:   (t.hour + minutes/60) % 24,
-	}
-	if t.minute+(minutes%60) >= 60 {
-		res.hour = (res.hour + 1) % 24
-	}
-	return res
+func (t Time) Add(minutes int) Time {
+	return Time((int(t) + minutes) % (24 * 60))
 }

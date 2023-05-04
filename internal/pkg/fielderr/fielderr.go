@@ -12,7 +12,7 @@ type Error struct {
 	// Data stores http response if it must be returned back to user.
 	data any
 	// Code must be internal code from this pkg.
-	code int
+	code Code
 	// Fields is additional field for zap logger.
 	fields []zap.Field
 	// parent is parent error
@@ -20,7 +20,7 @@ type Error struct {
 }
 
 // New creates new error with provided fields.
-func New(msg string, data any, code int, fields ...zap.Field) *Error {
+func New(msg string, data any, code Code, fields ...zap.Field) *Error {
 	return &Error{msg, data, code, fields, nil}
 }
 
@@ -66,7 +66,7 @@ func (f *Error) Data() any {
 }
 
 // Code return internal code.
-func (f *Error) Code() int {
+func (f *Error) Code() Code {
 	if f == nil {
 		return 0
 	}

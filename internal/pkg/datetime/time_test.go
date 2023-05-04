@@ -6,22 +6,41 @@ import (
 )
 
 var (
-	TestTime1 = Time{
-		hour:   11,
-		minute: 59,
-	}
-	TestTime2 = Time{
-		hour:   12,
-		minute: 01,
-	}
+	TestTime1 = Time(11*60 + 59)
+	TestTime2 = Time(12*60 + 1)
 )
+
+func TestTime_In(t *testing.T) {
+	t.Run("non reversed", func(t *testing.T) {
+		h := &TimeInterval{
+			start:   TestTime1,
+			end:     TestTime2,
+			reverse: false,
+		}
+		assert.True(t, TestTime1.In(h))
+		assert.True(t, TestTime2.In(h))
+		assert.False(t, (TestTime1 - 1).In(h))
+		assert.False(t, (TestTime2 + 1).In(h))
+	})
+	t.Run("reversed", func(t *testing.T) {
+		h := &TimeInterval{
+			start:   TestTime2,
+			end:     TestTime1,
+			reverse: true,
+		}
+		assert.True(t, TestTime1.In(h))
+		assert.True(t, TestTime2.In(h))
+		assert.False(t, (TestTime1 + 1).In(h))
+		assert.False(t, (TestTime2 - 1).In(h))
+	})
+}
 
 func TestParseTime(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		h, err := ParseTime("12:02")
 		assert.NoError(t, err)
-		assert.Equal(t, uint8(12), h.Hour())
-		assert.Equal(t, uint8(2), h.Minute())
+		assert.Equal(t, 12, h.Hour())
+		assert.Equal(t, 2, h.Minute())
 		parseFromH, err := ParseTime(h.String())
 		assert.NoError(t, err)
 		assert.Equal(t, h, parseFromH)
@@ -31,73 +50,73 @@ func TestParseTime(t *testing.T) {
 		if assert.Error(t, err) {
 			assert.ErrorIs(t, err, ErrBadWorkingHours)
 		}
-		assert.Equal(t, Time{}, h)
+		assert.Equal(t, Time(0), h)
 	})
 	t.Run("hour is not parsable", func(t *testing.T) {
 		h, err := ParseTime("d:12")
 		if assert.Error(t, err) {
 			assert.ErrorIs(t, err, ErrBadWorkingHours)
 		}
-		assert.Equal(t, Time{}, h)
+		assert.Equal(t, Time(0), h)
 	})
 	t.Run("hour must be two-digit int (00, 01, 02 etc.)", func(t *testing.T) {
 		h, err := ParseTime("1:12")
 		if assert.Error(t, err) {
 			assert.ErrorIs(t, err, ErrBadWorkingHours)
 		}
-		assert.Equal(t, Time{}, h)
+		assert.Equal(t, Time(0), h)
 	})
 	t.Run("minute must be two-digit int (00, 01, 02 etc.)", func(t *testing.T) {
 		h, err := ParseTime("12:2")
 		if assert.Error(t, err) {
 			assert.ErrorIs(t, err, ErrBadWorkingHours)
 		}
-		assert.Equal(t, Time{}, h)
+		assert.Equal(t, Time(0), h)
 	})
 	t.Run("minute is not parsable", func(t *testing.T) {
 		h, err := ParseTime("11:sdf")
 		if assert.Error(t, err) {
 			assert.ErrorIs(t, err, ErrBadWorkingHours)
 		}
-		assert.Equal(t, Time{}, h)
+		assert.Equal(t, Time(0), h)
 	})
 	t.Run("hour must be less then 24", func(t *testing.T) {
 		h, err := ParseTime("24:22")
 		if assert.Error(t, err) {
 			assert.ErrorIs(t, err, ErrBadWorkingHours)
 		}
-		assert.Equal(t, Time{}, h)
+		assert.Equal(t, Time(0), h)
 	})
 	t.Run("minute must be less then 24", func(t *testing.T) {
 		h, err := ParseTime("22:60")
 		if assert.Error(t, err) {
 			assert.ErrorIs(t, err, ErrBadWorkingHours)
 		}
-		assert.Equal(t, Time{}, h)
+		assert.Equal(t, Time(0), h)
 	})
 }
 
 func TestTime_Less(t *testing.T) {
 	t.Run("different hours", func(t *testing.T) {
-		t1, t2 := Time{hour: 12, minute: 23}, Time{hour: 14, minute: 24}
+		t1, t2 := Time(12*60+23), Time(14*60+24)
 		assert.True(t, t1.Less(t2))
 		assert.False(t, t2.Less(t1))
 	})
 	t.Run("same hours", func(t *testing.T) {
-		t1, t2 := Time{hour: 12, minute: 23}, Time{hour: 12, minute: 24}
+		t1, t2 := Time(12*60+23), Time(12*60+24)
 		assert.True(t, t1.Less(t2))
 		assert.False(t, t2.Less(t1))
 	})
 }
 
 func TestTime_Hour(t *testing.T) {
-	assert.Equal(t, TestTime1.hour, TestTime1.Hour())
-	assert.Equal(t, TestTime2.hour, TestTime2.Hour())
+	assert.Equal(t, int(TestTime1)/60, TestTime1.Hour())
+	assert.Equal(t, int(TestTime2)/60, TestTime2.Hour())
 }
 
 func TestTime_Minute(t *testing.T) {
-	assert.Equal(t, TestTime1.minute, TestTime1.Minute())
-	assert.Equal(t, TestTime2.minute, TestTime2.Minute())
+	assert.Equal(t, int(TestTime1)%60, TestTime1.Minute())
+	assert.Equal(t, int(TestTime2)%60, TestTime2.Minute())
 }
 
 func TestTime_Add(t *testing.T) {
@@ -105,11 +124,11 @@ func TestTime_Add(t *testing.T) {
 		name     string
 		before   Time
 		expected Time
-		add      uint8
+		add      int
 	}{
-		{"default", Time{12, 22}, Time{13, 40}, 78},
-		{"minutes overflows", Time{12, 22}, Time{13, 00}, 38},
-		{"hours overflows", Time{23, 59}, Time{2, 59}, 180},
+		{"default", Time(12*60 + 22), Time(13*60 + 40), 78},
+		{"minutes overflows", Time(12*60 + 22), Time(13*60 + 00), 38},
+		{"hours overflows", Time(23*60 + 59), Time(2*60 + 59), 180},
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
@@ -121,8 +140,8 @@ func TestTime_Add(t *testing.T) {
 func TestTime_String(t *testing.T) {
 	tt := []struct {
 		name   string
-		hour   uint8
-		minute uint8
+		hour   int
+		minute int
 		want   string
 	}{
 		{"hour >= 10 and minute >= 10", 10, 10, "10:10"},
@@ -133,7 +152,7 @@ func TestTime_String(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.want, Time{hour: tc.hour, minute: tc.minute}.String())
+			assert.Equal(t, tc.want, Time(tc.hour*60+tc.minute).String())
 		})
 	}
 }

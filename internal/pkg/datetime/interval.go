@@ -51,10 +51,7 @@ func (h *TimeInterval) String() string {
 
 // TimeIn return is time in interval or not.
 func (h *TimeInterval) TimeIn(t time.Time) bool {
-	return Time{
-		hour:   uint8(t.Hour()),
-		minute: uint8(t.Minute()),
-	}.In(h)
+	return Time(60*t.Hour() + t.Minute()).In(h)
 }
 
 // MarshalJSON makes available to represent time interval in JSON format which is parsable back to TimeInterval obj.

@@ -1,9 +1,7 @@
 package http
 
 import (
-	"github.com/asaskevich/govalidator"
 	"github.com/labstack/echo/v4"
-	mw "github.com/vlad-marlo/yandex-academy-enrollment/internal/middleware"
 	"github.com/vlad-marlo/yandex-academy-enrollment/internal/model"
 	"net/http"
 )
@@ -44,7 +42,7 @@ func (srv *Controller) HandleGetCourier(c echo.Context) error {
 //	@Failure	400		{object}	model.BadRequestResponse	"Bad Request"
 //	@Router		/couriers/ [get]
 func (srv *Controller) HandleGetCouriers(c echo.Context) error {
-	opts := mw.GetPaginationOptsFromRequest(c)
+	opts := GetPaginationOptsFromRequest(c)
 	resp, err := srv.srv.GetCouriers(c.Request().Context(), opts)
 	if err != nil {
 		return srv.checkErr(c, err)
@@ -65,9 +63,6 @@ func (srv *Controller) HandleGetCouriers(c echo.Context) error {
 func (srv *Controller) HandleCreateCouriers(c echo.Context) error {
 	var request model.CreateCourierRequest
 	if err := c.Bind(&request); err != nil {
-		return c.JSON(http.StatusBadRequest, nil)
-	}
-	if ok, _ := govalidator.ValidateStruct(request); !ok {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 	resp, err := srv.srv.CreateCouriers(c.Request().Context(), &request)
@@ -164,7 +159,7 @@ func (srv *Controller) HandleGetOrder(c echo.Context) error {
 //	@Failure	400		{object}	model.BadRequestResponse	"Bad Request"
 //	@Router		/orders/ [get]
 func (srv *Controller) HandleGetOrders(c echo.Context) error {
-	opts := mw.GetPaginationOptsFromRequest(c)
+	opts := GetPaginationOptsFromRequest(c)
 	resp, err := srv.srv.GetOrders(c.Request().Context(), opts)
 	if err != nil {
 		return srv.checkErr(c, err)

@@ -6,6 +6,13 @@ import (
 	"github.com/vlad-marlo/yandex-academy-enrollment/internal/pkg/datetime"
 	"github.com/vlad-marlo/yandex-academy-enrollment/internal/pkg/fielderr"
 	"go.uber.org/zap"
+	"net/http"
+	"strconv"
+)
+
+const (
+	queryLimitParamName  = "limit"
+	queryOffsetParamName = "offset"
 )
 
 // respond writes data to response writer.
@@ -17,7 +24,7 @@ func (srv *Controller) checkErr(c echo.Context, err error) error {
 		return c.JSON(fieldErr.CodeHTTP(), fieldErr.Data())
 	}
 	zap.L().Warn("checked error", zap.Error(err))
-	return err
+	return c.JSON(http.StatusBadRequest, nil)
 }
 
 func (srv *Controller) dateFromContext(c echo.Context, queryParamName string) (*datetime.Date, error) {
@@ -26,4 +33,57 @@ func (srv *Controller) dateFromContext(c echo.Context, queryParamName string) (*
 		return datetime.Today(), nil
 	}
 	return datetime.ParseDate(s)
+}
+
+// PaginationOpts encapsulates limit and offset from developer into private fields.
+//
+// Opts can be accessed by getters.
+type PaginationOpts struct {
+	limit  int
+	offset int
+}
+
+func NewPaginationOpts(limit, offset string) (opts *PaginationOpts) {
+	opts = &PaginationOpts{
+		limit:  1,
+		offset: 0,
+	}
+	var err error
+	if limit != "" {
+		opts.limit, err = strconv.Atoi(limit)
+		if err != nil {
+			opts.limit = 1
+		}
+	}
+	if offset != "" {
+		opts.offset, err = strconv.Atoi(offset)
+		if err != nil {
+			opts.offset = 0
+		}
+	}
+	return opts
+}
+
+// Limit is limit getter.
+func (opts *PaginationOpts) Limit() int {
+	if opts == nil {
+		zap.L().Warn("unexpected got nil pagination opts")
+		return 1
+	}
+	return opts.limit
+}
+
+// Offset is offset getter.
+func (opts *PaginationOpts) Offset() int {
+	if opts == nil {
+		zap.L().Warn("unexpected got nil pagination opts")
+		return 0
+	}
+	return opts.offset
+}
+
+// GetPaginationOptsFromRequest return options from echo context.
+func GetPaginationOptsFromRequest(c echo.Context) *PaginationOpts {
+	opts := NewPaginationOpts(c.QueryParam(queryLimitParamName), c.QueryParam(queryOffsetParamName))
+	return opts
 }

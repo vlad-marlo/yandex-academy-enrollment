@@ -5,44 +5,41 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
+	"time"
 )
 
 var (
 	TestTimeInterval = &TimeInterval{
-		start: Time{
-			hour:   11,
-			minute: 12,
-		},
-		end: Time{
-			hour:   22,
-			minute: 33,
-		},
+		start:   Time(11*60 + 12),
+		end:     Time(22*60 + 33),
 		reverse: false,
 	}
+	TestTimeTime1 = time.Date(2000, time.December, 1, 11, 12, 0, 0, time.UTC)
+	TestTimeTime2 = time.Date(2000, time.December, 1, 22, 33, 0, 0, time.UTC)
 )
 
 func TestParseTimeInterval_OK_NonReversed(t *testing.T) {
-	var startH, startM, endH, endM uint8 = 12, 59, 23, 33
+	var startH, startM, endH, endM = 12, 59, 23, 33
 	h, err := ParseTimeInterval(fmt.Sprintf("%d:%d-%d:%d", startH, startM, endH, endM))
 	assert.NoError(t, err)
 	if assert.NotNil(t, h) {
-		assert.Equal(t, startH, h.start.hour)
-		assert.Equal(t, startM, h.start.minute)
-		assert.Equal(t, endH, h.end.hour)
-		assert.Equal(t, endM, h.end.minute)
+		assert.Equal(t, startH, h.start.Hour())
+		assert.Equal(t, startM, h.start.Minute())
+		assert.Equal(t, endH, h.end.Hour())
+		assert.Equal(t, endM, h.end.Minute())
 		assert.False(t, h.reverse)
 	}
 }
 
 func TestParseTimeInterval_OK_Reversed(t *testing.T) {
-	var endH, endM, startH, startM uint8 = 12, 59, 23, 33
+	var endH, endM, startH, startM = 12, 59, 23, 33
 	h, err := ParseTimeInterval(fmt.Sprintf("%d:%d-%d:%d", startH, startM, endH, endM))
 	assert.NoError(t, err)
 	if assert.NotNil(t, h) {
-		assert.Equal(t, startH, h.start.hour)
-		assert.Equal(t, startM, h.start.minute)
-		assert.Equal(t, endH, h.end.hour)
-		assert.Equal(t, endM, h.end.minute)
+		assert.Equal(t, startH, h.start.Hour())
+		assert.Equal(t, startM, h.start.Minute())
+		assert.Equal(t, endH, h.end.Hour())
+		assert.Equal(t, endM, h.end.Minute())
 		assert.True(t, h.reverse)
 	}
 }
@@ -114,4 +111,29 @@ func TestTimeInterval_UnmarshalJSON_Negative_BadTime(t *testing.T) {
 
 	err := h.UnmarshalJSON([]byte("\"12:22:22-22\""))
 	assert.Error(t, err)
+}
+
+func TestTimeInterval_Start(t *testing.T) {
+	t.Run("positive", func(t *testing.T) {
+		assert.Equal(t, TestTimeInterval.start, TestTimeInterval.Start())
+	})
+	t.Run("nil time interval", func(t *testing.T) {
+		assert.Equal(t, Time(0), (*TimeInterval)(nil).Start())
+	})
+}
+
+func TestTimeInterval_End(t *testing.T) {
+	t.Run("positive", func(t *testing.T) {
+		assert.Equal(t, TestTimeInterval.end, TestTimeInterval.End())
+	})
+	t.Run("nil time interval", func(t *testing.T) {
+		assert.Equal(t, Time(0), (*TimeInterval)(nil).End())
+	})
+}
+
+func TestTimeIn(t *testing.T) {
+	t.Run("main positive", func(t *testing.T) {
+		assert.True(t, TestTimeInterval.TimeIn(TestTimeTime1))
+		assert.True(t, TestTimeInterval.TimeIn(TestTimeTime2))
+	})
 }

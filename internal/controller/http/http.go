@@ -49,14 +49,14 @@ func (srv *Controller) configureRoutes() {
 	couriers := srv.engine.Group("/couriers")
 	{
 		couriers.GET("/:courier_id", srv.HandleGetCourier)
-		couriers.GET("/", srv.HandleGetCouriers, mw.Paginator)
+		couriers.GET("/", srv.HandleGetCouriers)
 		couriers.POST("/", srv.HandleCreateCouriers)
 		couriers.GET("/meta-info/:courier_id", srv.HandleGetCourierMetaInfo)
 		couriers.GET("/assignments", srv.HandleGetOrdersAssign)
 	}
 	orders := srv.engine.Group("/orders")
 	{
-		orders.GET("/", srv.HandleGetOrders, mw.Paginator)
+		orders.GET("/", srv.HandleGetOrders)
 		orders.POST("/", srv.HandleCreateOrders)
 		orders.POST("/complete", srv.HandleCompleteOrders)
 		orders.POST("/assign", srv.HandleAssignOrders)

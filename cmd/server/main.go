@@ -30,6 +30,7 @@ func CreateApp() fx.Option {
 		fx.Invoke(
 			RunServer,
 		),
+		fx.NopLogger,
 	)
 }
 

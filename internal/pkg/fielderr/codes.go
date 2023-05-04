@@ -2,8 +2,10 @@ package fielderr
 
 import "net/http"
 
+type Code int
+
 const (
-	CodeBadRequest = iota
+	CodeBadRequest Code = iota
 	CodeNotFound
 	CodeInternal
 	CodeUnauthorized
@@ -12,7 +14,7 @@ const (
 	CodeNoContent
 )
 
-var httpCodes = map[int]int{
+var httpCodes = map[Code]int{
 	CodeBadRequest:   http.StatusBadRequest,
 	CodeNotFound:     http.StatusNotFound,
 	CodeInternal:     http.StatusInternalServerError,
