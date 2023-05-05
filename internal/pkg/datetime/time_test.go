@@ -156,3 +156,28 @@ func TestTime_String(t *testing.T) {
 		})
 	}
 }
+
+func TestParseTime_Negative(t *testing.T) {
+	tt := []struct {
+		name string
+		raw  string
+	}{
+		{"bad count of \":\"", "123:123:123"},
+		{"hour is not parsable", "12d:23"},
+		{"bad len of hour", "2:22"},
+		{"bad len of minute", "22:2"},
+		{"hour is bigger then max val", "24:22"},
+		{"hour is lower then min val", "-1:22"},
+		{"minute is not parsable", "22:as"},
+		{"minute is bigger then max val", "22:60"},
+		{"minute is lower then min val", "22:-1"},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := ParseTime(tc.raw)
+			if assert.Error(t, err) {
+				assert.ErrorIs(t, err, ErrBadWorkingHours)
+			}
+		})
+	}
+}

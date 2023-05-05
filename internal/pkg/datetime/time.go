@@ -38,14 +38,14 @@ func ParseTime(raw string) (w Time, err error) {
 	if len(t[0]) != 2 || len(t[1]) != 2 {
 		return w, ErrBadWorkingHours
 	}
-	if hour > maxHourValue {
+	if hour > maxHourValue || hour < 0 {
 		return w, fmt.Errorf("%w: hour must be less then 24", ErrBadWorkingHours)
 	}
 
 	if minute, err = strconv.Atoi(t[1]); err != nil {
 		return w, fmt.Errorf("%w: err while parsing minute: %v", ErrBadWorkingHours, err)
 	}
-	if minute > maxMinuteValue {
+	if minute > maxMinuteValue || minute < 0 {
 		return w, ErrBadWorkingHours
 	}
 

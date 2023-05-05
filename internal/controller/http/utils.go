@@ -18,12 +18,13 @@ const (
 // respond writes data to response writer.
 //
 // Passing nil data will write text status code to w.
-func (srv *Controller) checkErr(c echo.Context, err error) error {
+func (srv *Controller) checkErr(c echo.Context, msg string, err error, fields ...zap.Field) error {
 	var fieldErr *fielderr.Error
 	if errors.As(err, &fieldErr) {
+		srv.log.Warn(msg, append(fieldErr.Fields(), fields...)...)
 		return c.JSON(fieldErr.CodeHTTP(), fieldErr.Data())
 	}
-	zap.L().Warn("checked error", zap.Error(err))
+	srv.log.Warn(msg, append(fields, zap.Error(err))...)
 	return c.JSON(http.StatusBadRequest, nil)
 }
 

@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"github.com/caarlos0/env/v8"
 	"go.uber.org/zap"
 	"sync"
@@ -27,9 +26,10 @@ type ControllerConfig struct {
 // NewControllerConfig initializes controller config and returns it to user.
 func NewControllerConfig() (*ControllerConfig, error) {
 	cfg := new(ControllerConfig)
-	if err := env.Parse(cfg); err != nil {
-		return nil, fmt.Errorf("env: parse: %w", err)
-	}
+	_ = env.Parse(cfg)
+	//if err := env.Parse(cfg); err != nil {
+	//	return nil, fmt.Errorf("env: parse: %w", err)
+	//}
 	return cfg, nil
 }
 

@@ -66,29 +66,22 @@ func ParseDate(raw string) (d *Date, err error) {
 }
 
 func (d *Date) valid() bool {
+	if d == nil {
+		return false
+	}
 	if d.day < 1 {
 		return false
 	}
 	switch d.month {
 	case January, March, May, July, August, October, December:
-		if d.day > maxDay {
-			return false
-		}
+		return d.day <= maxDay
 	case February:
-		if d.day <= 28 {
-			return true
-		}
-		if d.day == 29 && !isYearLeap(d.year) {
-			return false
-		}
+		return (d.day == 29 && isYearLeap(d.year)) || (d.day <= 28)
 	case April, June, September, November:
-		if d.day >= maxDay {
-			return false
-		}
+		return d.day < maxDay
 	default:
 		return false
 	}
-	return true
 }
 
 func isYearLeap(year int) bool {

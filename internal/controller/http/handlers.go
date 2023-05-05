@@ -3,6 +3,7 @@ package http
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/vlad-marlo/yandex-academy-enrollment/internal/model"
+	"go.uber.org/zap"
 	"net/http"
 )
 
@@ -25,6 +26,7 @@ func (srv *Controller) HandleGetCourier(c echo.Context) error {
 	id := c.Param("courier_id")
 	courier, err := srv.srv.GetCourierByID(c.Request().Context(), id)
 	if err != nil {
+		srv.log.Warn("error while getting courier by id", zap.String("courier-id", id), zap.Error(err))
 		return c.JSON(http.StatusNotFound, nil)
 	}
 	return c.JSON(http.StatusOK, courier)
@@ -45,7 +47,7 @@ func (srv *Controller) HandleGetCouriers(c echo.Context) error {
 	opts := GetPaginationOptsFromRequest(c)
 	resp, err := srv.srv.GetCouriers(c.Request().Context(), opts)
 	if err != nil {
-		return srv.checkErr(c, err)
+		return srv.checkErr(c, "err while getting response", err, zap.Any("pagination_opts", opts))
 	}
 	return c.JSON(http.StatusOK, resp)
 }
@@ -63,11 +65,11 @@ func (srv *Controller) HandleGetCouriers(c echo.Context) error {
 func (srv *Controller) HandleCreateCouriers(c echo.Context) error {
 	var request model.CreateCourierRequest
 	if err := c.Bind(&request); err != nil {
-		return c.JSON(http.StatusBadRequest, nil)
+		return srv.checkErr(c, "err while binding request", err)
 	}
 	resp, err := srv.srv.CreateCouriers(c.Request().Context(), &request)
 	if err != nil {
-		return srv.checkErr(c, err)
+		return srv.checkErr(c, "err while getting response", err)
 	}
 	return c.JSON(http.StatusOK, resp)
 }
@@ -85,15 +87,15 @@ func (srv *Controller) HandleCreateCouriers(c echo.Context) error {
 //	@Failure	400			{object}	model.BadRequestResponse			"Bad Request"
 //	@Router		/couriers/meta-info/{courier_id} [get]
 func (srv *Controller) HandleGetCourierMetaInfo(c echo.Context) error {
-	var req *model.GetCourierMetaInfoRequest
+	var req model.GetCourierMetaInfoRequest
 
-	if err := c.Bind(req); err != nil {
+	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
-	resp, err := srv.srv.GetCourierMetaInfo(c.Request().Context(), req)
+	resp, err := srv.srv.GetCourierMetaInfo(c.Request().Context(), &req)
 	if err != nil {
-		return srv.checkErr(c, err)
+		return srv.checkErr(c, "err while getting courier meta info", err)
 	}
 
 	return c.JSON(http.StatusOK, resp)
@@ -113,7 +115,7 @@ func (srv *Controller) HandleGetCourierMetaInfo(c echo.Context) error {
 func (srv *Controller) HandleGetOrdersAssign(c echo.Context) error {
 	date, err := srv.dateFromContext(c, "date")
 	if err != nil {
-		return srv.checkErr(c, err)
+		return srv.checkErr(c, "err while getting date from context", err)
 	}
 
 	var resp *model.OrderAssignResponse
@@ -121,7 +123,7 @@ func (srv *Controller) HandleGetOrdersAssign(c echo.Context) error {
 	rawID := c.QueryParam("courier_id")
 	resp, err = srv.srv.GetOrdersAssign(c.Request().Context(), date, rawID)
 	if err != nil {
-		return srv.checkErr(c, err)
+		return srv.checkErr(c, "err while getting response", err)
 	}
 
 	return c.JSON(http.StatusOK, resp)
@@ -142,7 +144,7 @@ func (srv *Controller) HandleGetOrder(c echo.Context) error {
 	id := c.Param("order_id")
 	resp, err := srv.srv.GetOrderByID(c.Request().Context(), id)
 	if err != nil {
-		return srv.checkErr(c, err)
+		return srv.checkErr(c, "err while getting courier by id", err)
 	}
 	return c.JSON(http.StatusOK, resp)
 }
@@ -162,7 +164,7 @@ func (srv *Controller) HandleGetOrders(c echo.Context) error {
 	opts := GetPaginationOptsFromRequest(c)
 	resp, err := srv.srv.GetOrders(c.Request().Context(), opts)
 	if err != nil {
-		return srv.checkErr(c, err)
+		return srv.checkErr(c, "error while getting orders", err)
 	}
 	return c.JSON(http.StatusOK, resp)
 }
@@ -180,11 +182,11 @@ func (srv *Controller) HandleGetOrders(c echo.Context) error {
 func (srv *Controller) HandleCreateOrders(c echo.Context) error {
 	req := new(model.CreateOrderRequest)
 	if err := c.Bind(req); err != nil {
-		return srv.checkErr(c, err)
+		return srv.checkErr(c, "error while binding request", err)
 	}
 	resp, err := srv.srv.CreateOrders(c.Request().Context(), req)
 	if err != nil {
-		return srv.checkErr(c, err)
+		return srv.checkErr(c, "error while creating orders", err)
 	}
 	return c.JSON(http.StatusOK, resp)
 }
@@ -204,11 +206,11 @@ func (srv *Controller) HandleCreateOrders(c echo.Context) error {
 func (srv *Controller) HandleCompleteOrders(c echo.Context) error {
 	req := new(model.CompleteOrderRequest)
 	if err := c.Bind(req); err != nil {
-		return srv.checkErr(c, err)
+		return srv.checkErr(c, "error while binding request", err)
 	}
 	resp, err := srv.srv.CompleteOrders(c.Request().Context(), req)
 	if err != nil {
-		return srv.checkErr(c, err)
+		return srv.checkErr(c, "error while completing orders", err)
 	}
 	return c.JSON(http.StatusOK, resp)
 }
@@ -226,13 +228,13 @@ func (srv *Controller) HandleCompleteOrders(c echo.Context) error {
 func (srv *Controller) HandleAssignOrders(c echo.Context) error {
 	date, err := srv.dateFromContext(c, "date")
 	if err != nil {
-		return srv.checkErr(c, err)
+		return srv.checkErr(c, "error while getting date from context", err)
 	}
 
 	var resp *model.OrderAssignResponse
 	resp, err = srv.srv.AssignOrders(c.Request().Context(), date)
 	if err != nil {
-		return srv.checkErr(c, err)
+		return srv.checkErr(c, "error while assigning orders", err)
 	}
 	return c.JSON(http.StatusCreated, resp)
 }

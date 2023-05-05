@@ -18,6 +18,9 @@ test:
 c:
 	go tool cover -func coverage.out
 
+.PHONY: tc
+tc: test c
+
 .PHONY: lines
 lines:
 	git ls-files | xargs wc -l
