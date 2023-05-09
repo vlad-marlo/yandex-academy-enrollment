@@ -27,7 +27,7 @@ func (srv *Controller) HandleGetCourier(c echo.Context) error {
 	courier, err := srv.srv.GetCourierByID(c.Request().Context(), id)
 	if err != nil {
 		srv.log.Warn("error while getting courier by id", zap.String("courier-id", id), zap.Error(err))
-		return c.JSON(http.StatusNotFound, nil)
+		return c.JSON(http.StatusNotFound, model.BadRequestResponse{})
 	}
 	return c.JSON(http.StatusOK, courier)
 }
@@ -90,7 +90,7 @@ func (srv *Controller) HandleGetCourierMetaInfo(c echo.Context) error {
 	var req model.GetCourierMetaInfoRequest
 
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, nil)
+		return c.JSON(http.StatusBadRequest, model.BadRequestResponse{})
 	}
 
 	resp, err := srv.srv.GetCourierMetaInfo(c.Request().Context(), &req)

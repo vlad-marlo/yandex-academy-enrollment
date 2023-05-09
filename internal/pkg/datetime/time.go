@@ -17,16 +17,16 @@ const (
 	maxMinuteValue = 59
 )
 
-// Time is time implementation with underlying hour and minute
-type Time int
+// Minute is time implementation with underlying hour and minute
+type Minute int
 
 // ParseTime parses time in HH:MM format from string.
 //
-// Time must be presented in HH:MM format.
+// Minute must be presented in HH:MM format.
 //
 // Only error that can be returned from this function is ErrBadWorkingHours of child
 // error of itself.
-func ParseTime(raw string) (w Time, err error) {
+func ParseTime(raw string) (w Minute, err error) {
 	t := strings.Split(raw, ":")
 	if len(t) != 2 {
 		return w, ErrBadWorkingHours
@@ -54,7 +54,7 @@ func ParseTime(raw string) (w Time, err error) {
 }
 
 // In return is time in interval or not.
-func (t Time) In(h *TimeInterval) bool {
+func (t Minute) In(h *TimeInterval) bool {
 	if h.reverse {
 		return t >= h.start || t <= h.end
 	}
@@ -63,8 +63,8 @@ func (t Time) In(h *TimeInterval) bool {
 
 // String returns string representation of time.
 //
-// Time will be in format HH:MM and must be parsable back to Time object from string.
-func (t Time) String() string {
+// Minute will be in format HH:MM and must be parsable back to Minute object from string.
+func (t Minute) String() string {
 	var hour, minute string
 	h, m := t.Hour(), t.Minute()
 	if h < 10 {
@@ -81,20 +81,20 @@ func (t Time) String() string {
 }
 
 // Hour is hour accessor.
-func (t Time) Hour() int {
+func (t Minute) Hour() int {
 	return int(t) / 60
 }
 
 // Minute is minute accessor.
-func (t Time) Minute() int {
+func (t Minute) Minute() int {
 	return int(t) % 60
 }
 
 // Less is helper comparator function.
-func (t Time) Less(other Time) bool {
+func (t Minute) Less(other Minute) bool {
 	return t < other
 }
 
-func (t Time) Add(minutes int) Time {
-	return Time((int(t) + minutes) % (24 * 60))
+func (t Minute) Add(minutes int) Minute {
+	return Minute((int(t) + minutes) % (24 * 60))
 }

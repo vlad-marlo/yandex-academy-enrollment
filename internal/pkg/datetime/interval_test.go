@@ -10,8 +10,8 @@ import (
 
 var (
 	TestTimeInterval = &TimeInterval{
-		start:   Time(11*60 + 12),
-		end:     Time(22*60 + 33),
+		start:   Minute(11*60 + 12),
+		end:     Minute(22*60 + 33),
 		reverse: false,
 	}
 	TestTimeTime1 = time.Date(2000, time.December, 1, 11, 12, 0, 0, time.UTC)
@@ -118,7 +118,7 @@ func TestTimeInterval_Start(t *testing.T) {
 		assert.Equal(t, TestTimeInterval.start, TestTimeInterval.Start())
 	})
 	t.Run("nil time interval", func(t *testing.T) {
-		assert.Equal(t, Time(0), (*TimeInterval)(nil).Start())
+		assert.Equal(t, Minute(0), (*TimeInterval)(nil).Start())
 	})
 }
 
@@ -127,7 +127,7 @@ func TestTimeInterval_End(t *testing.T) {
 		assert.Equal(t, TestTimeInterval.end, TestTimeInterval.End())
 	})
 	t.Run("nil time interval", func(t *testing.T) {
-		assert.Equal(t, Time(0), (*TimeInterval)(nil).End())
+		assert.Equal(t, Minute(0), (*TimeInterval)(nil).End())
 	})
 }
 
@@ -136,4 +136,18 @@ func TestTimeIn(t *testing.T) {
 		assert.True(t, TestTimeInterval.TimeIn(TestTimeTime1))
 		assert.True(t, TestTimeInterval.TimeIn(TestTimeTime2))
 	})
+}
+
+func TestTimeIntervalAlias_TimeInterval(t *testing.T) {
+	tic := TimeIntervalAlias{
+		Start:   123,
+		End:     321,
+		Reverse: true,
+	}
+	ti := tic.TimeInterval()
+	if assert.NotNil(t, ti) {
+		assert.Equal(t, Minute(tic.End), ti.End())
+		assert.Equal(t, Minute(tic.Start), ti.Start())
+		assert.Equal(t, tic.Reverse, ti.reverse)
+	}
 }

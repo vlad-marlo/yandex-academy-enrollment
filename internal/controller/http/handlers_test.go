@@ -45,7 +45,7 @@ var (
 				TestTimeInterval1(t),
 			},
 			Cost:          0,
-			CompletedTime: time.Time{},
+			CompletedTime: datetime.TimeAlias{},
 		}
 		b, err := json.Marshal(resp)
 		require.NoError(t, err)
@@ -95,9 +95,9 @@ var (
 	completeOrdersRequest = func(t testing.TB) (string, *model.CompleteOrderRequest) {
 		req := &model.CompleteOrderRequest{
 			CompleteInfo: []model.CompleteOrder{
-				{1, 2, time.Now()},
-				{1, 21, time.Now().Add(123 * time.Minute)},
-				{231, 32213, time.Now().Add(10 * time.Hour)},
+				{1, 2, (datetime.TimeAlias)(time.Now())},
+				{1, 21, (datetime.TimeAlias)(time.Now().Add(123 * time.Minute))},
+				{231, 32213, (datetime.TimeAlias)(time.Now().Add(10 * time.Hour))},
 			},
 		}
 		b, err := json.Marshal(req)
@@ -122,7 +122,7 @@ var (
 										TestTimeInterval1(t),
 									},
 									Cost:          1233,
-									CompletedTime: time.Now(),
+									CompletedTime: (datetime.TimeAlias)(time.Now()),
 								},
 							},
 						},
@@ -172,7 +172,7 @@ func TestController_HandleGetCourier_Negative_ErrInService(t *testing.T) {
 		res := req.Result()
 		defer assert.NoError(t, res.Body.Close())
 		assert.Equal(t, http.StatusNotFound, req.Code)
-		jsonCourier, err := json.Marshal(nil)
+		jsonCourier, err := json.Marshal(model.BadRequestResponse{})
 		require.NoError(t, err)
 		assert.JSONEq(t, string(jsonCourier), req.Body.String())
 	}
@@ -382,7 +382,7 @@ func TestController_HandleCreateCouriers_Negative_ErrInService(t *testing.T) {
 		wantStatus int
 		wantResp   interface{}
 	}{
-		{"unknown error", ErrUnknown, http.StatusBadRequest, nil},
+		{"unknown error", ErrUnknown, http.StatusBadRequest, model.BadRequestResponse{}},
 		{"field error", fielderr.New("some error", someData, fielderr.CodeForbidden), http.StatusForbidden, someData},
 		{"field error", fielderr.New("some error", nil, fielderr.CodeForbidden), http.StatusForbidden, nil},
 	}
@@ -464,8 +464,7 @@ func TestController_HandleGetCourierMetaInfo_Negative_BadRequest(t *testing.T) {
 	}
 	reqString, err = json.Marshal(req)
 	require.NoError(t, err)
-	resp := (*model.GetCourierMetaInfoResponse)(nil)
-	respString, err = json.Marshal(resp)
+	respString, err = json.Marshal(model.BadRequestResponse{})
 	require.NoError(t, err)
 
 	serv := testServer(t, nil)
@@ -490,7 +489,7 @@ func TestController_HandleGetCourierMetaInfo_Negative_InternalError(t *testing.T
 		wantStatus int
 		wantBody   interface{}
 	}{
-		{"unknown", ErrUnknown, http.StatusBadRequest, nil},
+		{"unknown", ErrUnknown, http.StatusBadRequest, model.BadRequestResponse{}},
 		{"fielderr", fielderr.New("some msg", someData, fielderr.CodeNotFound), http.StatusNotFound, someData},
 		{"fielderr", fielderr.New("some msg", nil, fielderr.CodeNoContent), http.StatusNoContent, nil},
 	}
@@ -590,7 +589,7 @@ func TestController_HandleGetOrdersAssign_Negative_InternalErr(t *testing.T) {
 		wantStatus int
 		wantBody   interface{}
 	}{
-		{"unknown", ErrUnknown, http.StatusBadRequest, nil},
+		{"unknown", ErrUnknown, http.StatusBadRequest, model.BadRequestResponse{}},
 		{"fielderr", fielderr.New("some msg", someData, fielderr.CodeNotFound), http.StatusNotFound, someData},
 		{"fielderr", fielderr.New("some msg", nil, fielderr.CodeNoContent), http.StatusNoContent, nil},
 	}
@@ -654,7 +653,7 @@ func TestController_HandleGetOrder_Negative_NF(t *testing.T) {
 		wantStatus int
 		wantBody   interface{}
 	}{
-		{"unknown", ErrUnknown, http.StatusBadRequest, nil},
+		{"unknown", ErrUnknown, http.StatusBadRequest, model.BadRequestResponse{}},
 		{"fielderr", fielderr.New("some msg", someData, fielderr.CodeNotFound), http.StatusNotFound, someData},
 		{"fielderr", fielderr.New("some msg", nil, fielderr.CodeNoContent), http.StatusNoContent, nil},
 	}
@@ -711,7 +710,7 @@ func TestController_HandleGetOrders_Negative(t *testing.T) {
 		wantStatus int
 		wantBody   interface{}
 	}{
-		{"unknown", ErrUnknown, http.StatusBadRequest, nil},
+		{"unknown", ErrUnknown, http.StatusBadRequest, model.BadRequestResponse{}},
 		{"fielderr", fielderr.New("some msg", someData, fielderr.CodeNotFound), http.StatusNotFound, someData},
 		{"fielderr", fielderr.New("some msg", nil, fielderr.CodeNoContent), http.StatusNoContent, nil},
 	}
@@ -775,7 +774,7 @@ func TestController_HandleCreateOrders_Negative_BadRequest(t *testing.T) {
 
 	if assert.NoError(t, serv.HandleCreateOrders(c)) {
 		assert.Equal(t, http.StatusBadRequest, w.Code)
-		assert.JSONEq(t, "null", w.Body.String())
+		assert.JSONEq(t, "{}", w.Body.String())
 	}
 }
 
@@ -786,7 +785,7 @@ func TestController_HandleCreateOrders_Negative_Internal(t *testing.T) {
 		wantStatus int
 		wantBody   interface{}
 	}{
-		{"unknown", ErrUnknown, http.StatusBadRequest, nil},
+		{"unknown", ErrUnknown, http.StatusBadRequest, model.BadRequestResponse{}},
 		{"fielderr", fielderr.New("some msg", someData, fielderr.CodeNotFound), http.StatusNotFound, someData},
 		{"fielderr", fielderr.New("some msg", nil, fielderr.CodeNoContent), http.StatusNoContent, nil},
 	}
@@ -852,7 +851,7 @@ func TestController_HandleCompleteOrders_Negative_BadRequest(t *testing.T) {
 
 	if assert.NoError(t, serv.HandleCompleteOrders(c)) {
 		assert.Equal(t, http.StatusBadRequest, w.Code)
-		assert.JSONEq(t, "null", w.Body.String())
+		assert.JSONEq(t, "{}", w.Body.String())
 	}
 }
 
@@ -863,7 +862,7 @@ func TestController_HandleCompleteOrders_Negative_ErrInternal(t *testing.T) {
 		wantCode int
 		wantBody interface{}
 	}{
-		{"unknown", ErrUnknown, http.StatusBadRequest, nil},
+		{"unknown", ErrUnknown, http.StatusBadRequest, model.BadRequestResponse{}},
 		{"fielderr", fielderr.New("some msg", someData, fielderr.CodeNotFound), http.StatusNotFound, someData},
 		{"fielderr", fielderr.New("some msg", nil, fielderr.CodeNoContent), http.StatusNoContent, nil},
 	}
@@ -932,7 +931,7 @@ func TestController_HandleAssignOrders_Negative_BadDate(t *testing.T) {
 
 	if assert.NoError(t, serv.HandleAssignOrders(c)) {
 		assert.Equal(t, http.StatusBadRequest, w.Code)
-		assert.JSONEq(t, "null", w.Body.String())
+		assert.JSONEq(t, "{}", w.Body.String())
 	}
 }
 
@@ -943,7 +942,7 @@ func TestController_HandleAssignOrders_Negative_ErrInternal(t *testing.T) {
 		wantCode int
 		wantBody interface{}
 	}{
-		{"unknown", ErrUnknown, http.StatusBadRequest, nil},
+		{"unknown", ErrUnknown, http.StatusBadRequest, model.BadRequestResponse{}},
 		{"fielderr", fielderr.New("some msg", someData, fielderr.CodeNotFound), http.StatusNotFound, someData},
 		{"fielderr", fielderr.New("some msg", nil, fielderr.CodeNoContent), http.StatusNoContent, nil},
 	}

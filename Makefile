@@ -2,7 +2,7 @@
 
 .PHONY: build
 build:
-	go build -o server ./cmd/server/main.go
+	go build -o server.o ./cmd/server/main.go
 
 .PHONY: gen
 gen:

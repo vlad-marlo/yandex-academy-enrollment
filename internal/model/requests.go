@@ -1,13 +1,10 @@
 package model
 
 import (
-	"time"
+	"github.com/vlad-marlo/yandex-academy-enrollment/internal/pkg/datetime"
 )
 
 const (
-	FootCourierType = iota
-	BikeCourierType
-	AutoCourierType
 	FootCourierTypeString = "FOOT"
 	BikeCourierTypeString = "BIKE"
 	AutoCourierTypeString = "AUTO"
@@ -20,17 +17,14 @@ type (
 	CompleteOrderRequest struct {
 		CompleteInfo []CompleteOrder `json:"complete_info" validate:"required"`
 	}
-
 	CompleteOrder struct {
-		CourierID    int       `json:"courier_id" validate:"required"`
-		OrderID      int       `json:"order_id" validate:"required"`
-		CompleteTime time.Time `json:"complete_time" validate:"required"`
+		CourierID    int                `json:"courier_id" validate:"required"`
+		OrderID      int                `json:"order_id" validate:"required"`
+		CompleteTime datetime.TimeAlias `json:"complete_time,omitempty" swaggertype:"string" validate:"required"`
 	}
-
 	GetCourierRequest struct {
 		CourierID int `path:"courier_id" validate:"required"`
 	}
-
 	GetCourierMetaInfoRequest struct {
 		CourierID int    `path:"courier_id" validate:"required"`
 		StartDate string `query:"startDate" validate:"required"`

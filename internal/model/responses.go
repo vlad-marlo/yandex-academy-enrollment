@@ -28,8 +28,8 @@ type (
 		//
 		// String must be in HH:MM-HH:MM format where HH is hour (integer 0-23) and MM is minutes (integer 0-59).
 		WorkingHours []*datetime.TimeInterval `json:"working_hours" validate:"required" swaggertype:"array,string" example:"12:00-23:00,14:30-15:30"`
-		Rating       int                      `json:"rating"`
-		Earnings     int                      `json:"earnings"`
+		Rating       int                      `json:"rating,omitempty"`
+		Earnings     int                      `json:"earnings,omitempty"`
 	}
 	OrderAssignResponse struct {
 		Date     string               `json:"date"`

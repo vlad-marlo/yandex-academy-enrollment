@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	_ "github.com/vlad-marlo/yandex-academy-enrollment/docs"
 	"github.com/vlad-marlo/yandex-academy-enrollment/internal/controller"
@@ -22,14 +23,16 @@ func New(
 	logger *zap.Logger,
 	cfg controller.Config,
 	rateCfg mw.RateLimitConfig,
+	service controller.Service,
 ) (*Controller, error) {
 	srv := &Controller{
 		engine:  echo.New(),
 		log:     logger,
 		cfg:     cfg,
+		srv:     service,
 		rateCfg: rateCfg,
 	}
-	if logger == nil || cfg == nil || rateCfg == nil {
+	if logger == nil || cfg == nil || rateCfg == nil || service == nil {
 		return nil, ErrNilReference
 	}
 	srv.configure()
@@ -40,7 +43,9 @@ func New(
 func (srv *Controller) configureMW() {
 	srv.engine.Use(
 		mw.RateLimiter(srv.rateCfg),
+		middleware.Logger(),
 	)
+	//srv.engine.Pre(mw.LogRequest(srv.log))
 }
 
 func (srv *Controller) configureRoutes() {
@@ -48,20 +53,21 @@ func (srv *Controller) configureRoutes() {
 	srv.engine.GET("/ping", srv.HandlePing)
 	couriers := srv.engine.Group("/couriers")
 	{
+		srv.engine.GET("/couriers", srv.HandleGetCouriers)
+		srv.engine.POST("/couriers", srv.HandleCreateCouriers)
 		couriers.GET("/:courier_id", srv.HandleGetCourier)
-		couriers.GET("/", srv.HandleGetCouriers)
-		couriers.POST("/", srv.HandleCreateCouriers)
 		couriers.GET("/meta-info/:courier_id", srv.HandleGetCourierMetaInfo)
 		couriers.GET("/assignments", srv.HandleGetOrdersAssign)
 	}
 	orders := srv.engine.Group("/orders")
 	{
-		orders.GET("/", srv.HandleGetOrders)
-		orders.POST("/", srv.HandleCreateOrders)
-		orders.POST("/complete", srv.HandleCompleteOrders)
-		orders.POST("/assign", srv.HandleAssignOrders)
-		orders.GET("/:order_id", srv.HandleGetOrder)
+		orders.POST("/orders/complete", srv.HandleCompleteOrders)
+		orders.POST("/orders/assign", srv.HandleAssignOrders)
+		orders.GET("/orders/:order_id", srv.HandleGetOrder)
+		srv.engine.GET("/orders", srv.HandleGetOrders)
+		srv.engine.POST("/orders", srv.HandleCreateOrders)
 	}
+
 }
 
 func (srv *Controller) configure() {

@@ -3,6 +3,7 @@ package http
 import (
 	"errors"
 	"github.com/labstack/echo/v4"
+	"github.com/vlad-marlo/yandex-academy-enrollment/internal/model"
 	"github.com/vlad-marlo/yandex-academy-enrollment/internal/pkg/datetime"
 	"github.com/vlad-marlo/yandex-academy-enrollment/internal/pkg/fielderr"
 	"go.uber.org/zap"
@@ -25,7 +26,7 @@ func (srv *Controller) checkErr(c echo.Context, msg string, err error, fields ..
 		return c.JSON(fieldErr.CodeHTTP(), fieldErr.Data())
 	}
 	srv.log.Warn(msg, append(fields, zap.Error(err))...)
-	return c.JSON(http.StatusBadRequest, nil)
+	return c.JSON(http.StatusBadRequest, model.BadRequestResponse{})
 }
 
 func (srv *Controller) dateFromContext(c echo.Context, queryParamName string) (*datetime.Date, error) {

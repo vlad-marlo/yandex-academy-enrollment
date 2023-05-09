@@ -65,23 +65,35 @@ func ParseDate(raw string) (d *Date, err error) {
 	return
 }
 
-func (d *Date) valid() bool {
-	if d == nil {
+func (date *Date) valid() bool {
+	if date == nil {
 		return false
 	}
-	if d.day < 1 {
+	if date.day < 1 {
 		return false
 	}
-	switch d.month {
+	switch date.month {
 	case January, March, May, July, August, October, December:
-		return d.day <= maxDay
+		return date.day <= maxDay
 	case February:
-		return (d.day == 29 && isYearLeap(d.year)) || (d.day <= 28)
+		return (date.day == 29 && isYearLeap(date.year)) || (date.day <= 28)
 	case April, June, September, November:
-		return d.day < maxDay
+		return date.day < maxDay
 	default:
 		return false
 	}
+}
+
+func (date *Date) String() string {
+	var (
+		year  = fmt.Sprint(date.year)
+		month = fmt.Sprint(date.month)
+		day   = fmt.Sprint(date.day)
+	)
+	year = fmt.Sprintf("%s%s", strings.Repeat("0", 4-len(year)), year)
+	month = fmt.Sprintf("%s%s", strings.Repeat("0", 2-len(month)), month)
+	day = fmt.Sprintf("%s%s", strings.Repeat("0", 2-len(day)), day)
+	return fmt.Sprintf("%s-%s-%s", year, month, day)
 }
 
 func isYearLeap(year int) bool {

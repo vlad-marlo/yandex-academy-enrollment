@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/vlad-marlo/yandex-academy-enrollment/internal/controller/mocks"
 	"go.uber.org/zap"
 	"golang.org/x/time/rate"
 	"testing"
@@ -19,7 +20,7 @@ func TestRun(t *testing.T) {
 
 func TestNew(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		srv, err := New(zap.L(), &config{}, &config{})
+		srv, err := New(zap.L(), &config{}, &config{}, &mocks.MockService{})
 		assert.NoError(t, err)
 		if assert.NotNil(t, srv) {
 			assert.Equal(t, zap.L(), srv.log)
@@ -28,21 +29,21 @@ func TestNew(t *testing.T) {
 		}
 	})
 	t.Run("nil logger", func(t *testing.T) {
-		srv, err := New(nil, &config{}, &config{})
+		srv, err := New(nil, &config{}, &config{}, &mocks.MockService{})
 		assert.Nil(t, srv)
 		if assert.Error(t, err) {
 			assert.ErrorIs(t, err, ErrNilReference)
 		}
 	})
 	t.Run("nil config", func(t *testing.T) {
-		srv, err := New(zap.L(), nil, &config{})
+		srv, err := New(zap.L(), nil, &config{}, &mocks.MockService{})
 		assert.Nil(t, srv)
 		if assert.Error(t, err) {
 			assert.ErrorIs(t, err, ErrNilReference)
 		}
 	})
 	t.Run("nil rate config", func(t *testing.T) {
-		srv, err := New(zap.L(), &config{}, nil)
+		srv, err := New(zap.L(), &config{}, nil, &mocks.MockService{})
 		assert.Nil(t, srv)
 		if assert.Error(t, err) {
 			assert.ErrorIs(t, err, ErrNilReference)

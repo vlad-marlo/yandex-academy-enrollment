@@ -2,24 +2,23 @@ package model
 
 import (
 	"github.com/vlad-marlo/yandex-academy-enrollment/internal/pkg/datetime"
-	"time"
 )
 
 type (
 	OrderDTO struct {
-		OrderID int `json:"order_id" validate:"required"`
-		Weight  int `json:"weight" validate:"required"`
-		Regions int `json:"regions" validate:"required"`
+		OrderID int     `json:"order_id" validate:"required"`
+		Weight  float64 `json:"weight" validate:"required"`
+		Regions int     `json:"regions" validate:"required"`
 		// DeliveryHours is string slice of strings that represents time interval.
 		//
 		// String must be in HH:MM-HH:MM format where HH is hour (integer 0-23) and MM is minutes (integer 0-59).
 		DeliveryHours []*datetime.TimeInterval `json:"delivery_hours" swaggertype:"array,string" validate:"required"`
 		Cost          int                      `json:"cost" validate:"required"`
-		CompletedTime time.Time                `json:"completed_time" validate:"required"`
+		CompletedTime datetime.TimeAlias       `json:"completed_time,omitempty" swaggertype:"string" validate:"required"`
 	}
 	CreateOrderDTO struct {
-		Weight  int `json:"weight" validate:"required"`
-		Regions int `json:"regions" validate:"required"`
+		Weight  float64 `json:"weight" validate:"required"`
+		Regions int     `json:"regions" validate:"required"`
 		// DeliveryHours is string slice of strings that represents time interval.
 		//
 		// String must be in HH:MM-HH:MM format where HH is hour (integer 0-23) and MM is minutes (integer 0-59).

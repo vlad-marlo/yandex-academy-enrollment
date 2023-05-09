@@ -83,3 +83,29 @@ func TestIsYearLeap(t *testing.T) {
 		}
 	}
 }
+
+func TestDate_String(t *testing.T) {
+	tt := []struct {
+		name string
+		date Date
+		want string
+	}{
+		{name: "empty date", want: "0000-00-00"},
+		{"positive #1", Date{2022, 11, 30}, "2022-11-30"},
+		{"positive #1", Date{2022, 11, 3}, "2022-11-03"},
+		{"positive #1", Date{2022, 1, 30}, "2022-01-30"},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, tc.date.String())
+			if !tc.date.valid() {
+				return
+			}
+			date, err := ParseDate(tc.date.String())
+			assert.NoError(t, err)
+			if assert.NotNil(t, date) {
+				assert.Equal(t, tc.date, *date)
+			}
+		})
+	}
+}

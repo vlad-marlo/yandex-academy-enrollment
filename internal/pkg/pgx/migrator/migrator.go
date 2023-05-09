@@ -2,98 +2,54 @@ package migrator
 
 import (
 	"context"
-	"fmt"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"errors"
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/vlad-marlo/yandex-academy-enrollment/internal/pkg/pgx"
-	"go.uber.org/zap"
-)
-
-const (
-	createVersionTableTemplate = `CREATE TABLE IF NOT EXISTS migrate_version(
-    version int
-);`
-	getVersionTableTemplate       = `SELECT version FROM migrate_version;`
-	versionExistsTemplate         = "SELECT EXISTS(SELECT * FROM migrate_version);"
-	incrementVersionTableTemplate = `UPDATE migrate_version SET version = version + $1;`
 )
 
 var (
 	migrations = []string{
-		`CREATE TABLE IF NOT EXISTS time
+		`CREATE TABLE IF NOT EXISTS couriers
 (
-    id     bigserial unique primary key not null,
-    hour   int,
-    minute int
-);
-CREATE TABLE IF NOT EXISTS time_interval
-(
-    id         bigserial unique primary key not null,
-    start_time bigint references time (id)  not null,
-    end_time   bigint references time (id)  not null,
-    reverse    bool default false
+    id           BIGSERIAL PRIMARY KEY UNIQUE NOT NULL,
+    courier_type TEXT                         NOT NULL,
+    CONSTRAINT couriers_courier_type_check
+        check ((courier_type = 'FOOT'::text) OR (courier_type = 'AUTO'::text) OR
+               (courier_type = 'BIKE'::text))
 );`,
-		`CREATE TYPE courier_type AS ENUM (
-    'FOOT',
-    'BIKE',
-    'AUTO'
-    );
-CREATE TABLE IF NOT EXISTS couriers
+		`CREATE TABLE IF NOT EXISTS courier_region
 (
-    id   bigserial unique primary key not null,
-    type courier_type
+    id         BIGSERIAL PRIMARY KEY UNIQUE NOT NULL,
+    region     BIGINT                       NOT NULL,
+    courier_id BIGINT                       NOT NULL,
+    CONSTRAINT courier_fk FOREIGN KEY (courier_id) REFERENCES couriers MATCH FULL
+);`,
+		`CREATE TABLE IF NOT EXISTS courier_working_hour
+(
+    id         BIGSERIAL PRIMARY KEY UNIQUE NOT NULL,
+    start_time INTEGER DEFAULT 0            NOT NULL,
+    end_time   INTEGER default 0            NOT NULL,
+    reversed   BOOLEAN DEFAULT FALSE        NOT NULL,
+    courier_id BIGINT                       NOT NULL,
+    CONSTRAINT courier_fk FOREIGN KEY (courier_id) REFERENCES couriers
 );`,
 	}
 )
 
-type migrator struct {
-	pool    *pgxpool.Pool
-	log     *zap.Logger
-	ctx     context.Context
-	version int
-}
-
-func Migrate(cli pgx.Client) error {
-	m := &migrator{
-		ctx:  context.Background(),
-		log:  cli.L(),
-		pool: cli.P(),
+func Migrate(cli pgx.Client) (int, error) {
+	i := 0
+	for _, migration := range migrations {
+		if _, err := cli.P().Exec(context.Background(), migration); err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) {
+				if pgErr.Code == pgerrcode.DuplicateDatabase {
+					continue
+				}
+			}
+			return i, err
+		}
+		i++
 	}
-	return m.migrate()
-}
-
-func (m *migrator) migrate() error {
-	if err := m.createVersionTable(); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (m *migrator) createVersionTable() error {
-	_, err := m.pool.Exec(
-		m.ctx,
-		createVersionTableTemplate,
-	)
-	if err != nil {
-		return fmt.Errorf("err while creating table: %w", err)
-	}
-	var ok bool
-	if err = m.pool.QueryRow(
-		m.ctx,
-		versionExistsTemplate,
-	).Scan(&ok); err != nil {
-		return err
-	}
-	return err
-}
-
-func (m *migrator) getDatabaseVersion() (ver int, err error) {
-	if err = m.pool.QueryRow(m.ctx, getVersionTableTemplate).Scan(&ver); err != nil {
-		return 0, err
-	}
-	return ver, nil
-}
-
-func (m *migrator) incrementDatabaseVersion() error {
-	_, err := m.pool.Exec(m.ctx, incrementVersionTableTemplate)
-	return err
+	return i, nil
 }

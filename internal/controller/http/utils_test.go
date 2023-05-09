@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/vlad-marlo/yandex-academy-enrollment/internal/model"
 	"github.com/vlad-marlo/yandex-academy-enrollment/internal/pkg/fielderr"
 	"net/http"
 	"net/http/httptest"
@@ -27,7 +28,7 @@ func TestCheckErr(t *testing.T) {
 		status int
 		resp   interface{}
 	}{
-		{"unknown error", ErrUnknown, http.StatusBadRequest, nil},
+		{"unknown error", ErrUnknown, http.StatusBadRequest, model.BadRequestResponse{}},
 		{"fielderr", fielderr.New("some msg", nil, fielderr.CodeConflict), http.StatusConflict, nil},
 		{"fielderr", fielderr.New("some msg", someData, fielderr.CodeUnauthorized), http.StatusUnauthorized, someData},
 	}
