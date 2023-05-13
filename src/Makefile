@@ -2,17 +2,17 @@
 
 .PHONY: build
 build:
-	go build -o server.o ./src/cmd/server/main.go
+	go build -o server.o ./cmd/server/main.go
 
 .PHONY: gen
 gen:
 	swag fmt
-	swag init --d src/cmd/server/,src/internal/controller/http/,src/pkg/model/ -o ./src/docs/
+	swag init --d cmd/server/,internal/controller/http/,pkg/model/
 	go generate ./...
 
 .PHONY: test
 test:
-	go test ./src/... -v -coverpkg=./internal/... -coverprofile=coverage.out
+	go test ./... -v -coverpkg=./internal/... -coverprofile=coverage.out
 
 .PHONY: c
 c:
