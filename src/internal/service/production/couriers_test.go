@@ -319,7 +319,7 @@ func TestService_GetCourierMetaInfo_Negative_StorageErr_WhileGettingCourier(t *t
 			require.NoError(t, err)
 
 			str.EXPECT().GetCourierByID(gomock.Any(), courier.CourierID).Return(&courier, nil)
-			str.EXPECT().GetCompletedOrdersPriceByCourier(gomock.Any(), courier.CourierID, start.Start(), end.End()).Return([]int32{100, 100, 100}, nil)
+			str.EXPECT().GetCompletedOrdersPriceByCourier(gomock.Any(), courier.CourierID, start.Start(), end.End()).Return(int32(300), int32(3), nil)
 
 			resp, err = srv.GetCourierMetaInfo(ctx, req)
 			assert.NoError(t, err)
@@ -341,47 +341,43 @@ func TestService_GetCourierMetaInfo_Negative_StorageErr_WhileGettingCourier(t *t
 }
 
 func TestService_GetCourierMetaInfo_Positive_NoPrices(t *testing.T) {
-	for _, returned := range []any{nil, []int32{}} {
-		t.Run("with empty price", func(t *testing.T) {
-			ctx := context.Background()
+	ctx := context.Background()
 
-			ctrl := gomock.NewController(t)
-			str := mocks.NewMockStore(ctrl)
-			srv := testService(t, str)
+	ctrl := gomock.NewController(t)
+	str := mocks.NewMockStore(ctrl)
+	srv := testService(t, str)
 
-			var resp *model.GetCourierMetaInfoResponse
-			courier := model.CourierDTO{
-				CourierID:    123,
-				CourierType:  model.BikeCourierTypeString,
-				Regions:      testCourier(t, 123).Regions,
-				WorkingHours: testCourier(t, 123).WorkingHours,
-			}
-			req := &model.GetCourierMetaInfoRequest{
-				CourierID: courier.CourierID,
-				StartDate: "2022-12-31",
-				EndDate:   "2023-01-01",
-			}
-			var end *datetime.Date
-			start, err := datetime.ParseDate(req.StartDate)
-			require.NoError(t, err)
-			end, err = datetime.ParseDate(req.EndDate)
-			require.NoError(t, err)
+	var resp *model.GetCourierMetaInfoResponse
+	courier := model.CourierDTO{
+		CourierID:    123,
+		CourierType:  model.BikeCourierTypeString,
+		Regions:      testCourier(t, 123).Regions,
+		WorkingHours: testCourier(t, 123).WorkingHours,
+	}
+	req := &model.GetCourierMetaInfoRequest{
+		CourierID: courier.CourierID,
+		StartDate: "2022-12-31",
+		EndDate:   "2023-01-01",
+	}
+	var end *datetime.Date
+	start, err := datetime.ParseDate(req.StartDate)
+	require.NoError(t, err)
+	end, err = datetime.ParseDate(req.EndDate)
+	require.NoError(t, err)
 
-			str.EXPECT().GetCourierByID(gomock.Any(), courier.CourierID).Return(&courier, nil)
-			str.EXPECT().GetCompletedOrdersPriceByCourier(gomock.Any(), courier.CourierID, start.Start(), end.End()).Return(returned, nil)
+	str.EXPECT().GetCourierByID(gomock.Any(), courier.CourierID).Return(&courier, nil)
+	str.EXPECT().GetCompletedOrdersPriceByCourier(gomock.Any(), courier.CourierID, start.Start(), end.End()).Return(int32(0), int32(0), nil)
 
-			resp, err = srv.GetCourierMetaInfo(ctx, req)
-			assert.NoError(t, err)
-			if assert.NotNil(t, resp) {
-				want := &model.GetCourierMetaInfoResponse{
-					CourierID:    courier.CourierID,
-					CourierType:  courier.CourierType,
-					Regions:      courier.Regions,
-					WorkingHours: courier.WorkingHours,
-				}
-				assert.Equal(t, want, resp)
-			}
-		})
+	resp, err = srv.GetCourierMetaInfo(ctx, req)
+	assert.NoError(t, err)
+	if assert.NotNil(t, resp) {
+		want := &model.GetCourierMetaInfoResponse{
+			CourierID:    courier.CourierID,
+			CourierType:  courier.CourierType,
+			Regions:      courier.Regions,
+			WorkingHours: courier.WorkingHours,
+		}
+		assert.Equal(t, want, resp)
 	}
 }
 
@@ -411,7 +407,7 @@ func TestService_GetCourierMetaInfo_ErrWhileGettingEarnings(t *testing.T) {
 	require.NoError(t, err)
 
 	str.EXPECT().GetCourierByID(gomock.Any(), courier.CourierID).Return(&courier, nil)
-	str.EXPECT().GetCompletedOrdersPriceByCourier(gomock.Any(), courier.CourierID, start.Start(), end.End()).Return(nil, store.ErrNoContent)
+	str.EXPECT().GetCompletedOrdersPriceByCourier(gomock.Any(), courier.CourierID, start.Start(), end.End()).Return(int32(0), int32(0), store.ErrNoContent)
 
 	resp, err = srv.GetCourierMetaInfo(ctx, req)
 	if assert.Error(t, err) {

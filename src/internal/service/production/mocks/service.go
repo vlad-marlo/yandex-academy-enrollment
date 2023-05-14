@@ -80,12 +80,13 @@ func (mr *MockStoreMockRecorder) CreateOrders(ctx, orders interface{}) *gomock.C
 }
 
 // GetCompletedOrdersPriceByCourier mocks base method.
-func (m *MockStore) GetCompletedOrdersPriceByCourier(ctx context.Context, id int64, start, end time.Time) ([]int32, error) {
+func (m *MockStore) GetCompletedOrdersPriceByCourier(ctx context.Context, id int64, start, end time.Time) (int32, int32, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCompletedOrdersPriceByCourier", ctx, id, start, end)
-	ret0, _ := ret[0].([]int32)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(int32)
+	ret1, _ := ret[1].(int32)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetCompletedOrdersPriceByCourier indicates an expected call of GetCompletedOrdersPriceByCourier.

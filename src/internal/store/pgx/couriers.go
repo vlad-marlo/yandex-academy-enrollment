@@ -24,6 +24,7 @@ func (s *Store) getCourierRegions(ctx context.Context, id int64) (r []int32, err
 
 		return nil, fmt.Errorf("err while doing query: %w", err)
 	}
+	defer rows.Close()
 
 	var i int32
 	for rows.Next() {
@@ -52,8 +53,9 @@ func (s *Store) getCourierWorkingHours(ctx context.Context, id int64) (r []*date
 		if errors.Is(err, pgx.ErrNoRows) {
 			return r, nil
 		}
-		return nil, fmt.Errorf("err while doing ")
+		return nil, fmt.Errorf("err while doing query: %w", err)
 	}
+	defer rows.Close()
 
 	var h datetime.TimeIntervalAlias
 

@@ -81,7 +81,7 @@ func (srv *Service) GetCourierMetaInfo(ctx context.Context, req *model.GetCourie
 	var (
 		start, end *datetime.Date
 		courier    *model.CourierDTO
-		orders     []int32
+		count      int32
 	)
 
 	resp = &model.GetCourierMetaInfoResponse{
@@ -105,17 +105,11 @@ func (srv *Service) GetCourierMetaInfo(ctx context.Context, req *model.GetCourie
 	resp.CourierType = courier.CourierType
 	resp.WorkingHours = courier.WorkingHours
 
-	orders, err = srv.storage.GetCompletedOrdersPriceByCourier(ctx, courier.CourierID, start.Start(), end.End())
+	resp.Earnings, count, err = srv.storage.GetCompletedOrdersPriceByCourier(ctx, courier.CourierID, start.Start(), end.End())
 	if err != nil {
 		return nil, ErrNoContent.WithData(resp).With(zap.NamedError("storage_error", err))
 	}
-	if len(orders) == 0 {
-		return resp, nil
-	}
-	for _, price := range orders {
-		resp.Earnings += price
-	}
-	resp.Rating = int32((float64(len(orders)) / end.Start().Sub(start.Start()).Hours()) * float64(courier.RatingConst()))
+	resp.Rating = int32((float64(count) / end.Start().Sub(start.Start()).Hours()) * float64(courier.RatingConst()))
 	resp.Earnings *= courier.EarningsConst()
 
 	return resp, nil

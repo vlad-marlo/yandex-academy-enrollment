@@ -23,7 +23,7 @@ type Store interface {
 	GetOrderByID(ctx context.Context, id int64) (*model.OrderDTO, error)
 	GetOrders(ctx context.Context, limit int, offset int) ([]*model.OrderDTO, error)
 	CreateOrders(ctx context.Context, orders []*model.OrderDTO) error
-	GetCompletedOrdersPriceByCourier(ctx context.Context, id int64, start time.Time, end time.Time) ([]int32, error)
+	GetCompletedOrdersPriceByCourier(ctx context.Context, id int64, start time.Time, end time.Time) (sum int32, count int32, err error)
 	CompleteOrders(ctx context.Context, info []model.CompleteOrder) error
 	GetOrdersByIDs(ctx context.Context, ids []int64) ([]*model.OrderDTO, error)
 }
