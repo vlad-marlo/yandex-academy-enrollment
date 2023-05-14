@@ -29,14 +29,6 @@ func (req *CompleteOrderRequest) Valid() bool {
 	if req == nil {
 		return false
 	}
-	l := len(req.CompleteInfo)
-	switch l {
-	case 0:
-		return false
-	case 1:
-		return true
-	default:
-	}
 	orders := collections.NewSet[int64]()
 	return all[CompleteOrder](
 		func(item CompleteOrder) bool {

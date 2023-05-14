@@ -12,7 +12,7 @@ gen:
 
 .PHONY: test
 test:
-	go test ./... -v -coverpkg=./internal/... -coverprofile=coverage.out
+	go test ./... -v -coverpkg=./internal/...,./pkg/... -coverprofile=coverage.out
 
 .PHONY: c
 c:

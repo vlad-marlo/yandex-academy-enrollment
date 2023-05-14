@@ -8,6 +8,14 @@ import (
 	"testing"
 )
 
+func testService(t testing.TB, str Store) *Service {
+	t.Helper()
+	return &Service{
+		log:     zap.L(),
+		storage: str,
+	}
+}
+
 func TestService_ImplementsInterface(t *testing.T) {
 	assert.Implements(t, new(controller.Service), new(Service))
 }

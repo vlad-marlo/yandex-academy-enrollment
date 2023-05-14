@@ -3,6 +3,7 @@ package datetime
 import (
 	"encoding/json"
 	"fmt"
+	"golang.org/x/exp/constraints"
 	"strings"
 	"time"
 )
@@ -12,6 +13,24 @@ type TimeInterval struct {
 	start   Minute
 	end     Minute
 	reverse bool
+}
+
+const (
+	minutesInDay = Minute(24 * 60)
+)
+
+func min[T constraints.Integer | constraints.Float](a, b T) T {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func max[T constraints.Integer | constraints.Float](a, b T) T {
+	if a > b {
+		return a
+	}
+	return b
 }
 
 // TimeIntervalAlias is alias struct for TimeInterval.
@@ -88,6 +107,51 @@ func (h *TimeInterval) UnmarshalJSON(data []byte) error {
 	}
 	*h = *interval
 	return nil
+}
+
+func (h *TimeInterval) calculateCommonForReversed(other *TimeInterval) (*TimeInterval, Minute) {
+	if !h.reverse {
+		return other.calculateCommonForReversed(h)
+	}
+	if h.start >= other.end && h.end <= other.start {
+		return new(TimeInterval), 0
+	}
+
+	start := max(h.end, other.start)
+	end := min(h.start, other.end)
+
+	res := &TimeInterval{start: start, end: end, reverse: start > end}
+	return res, res.Duration()
+}
+
+func (h *TimeInterval) Common(other *TimeInterval) (*TimeInterval, Minute) {
+	if h == nil || other == nil {
+		panic("unexpectedly got nil pointer reference")
+	}
+	if h.reverse != other.reverse {
+		return h.calculateCommonForReversed(other)
+	}
+
+	start := max(h.start, other.start)
+	end := min(h.end, other.end)
+
+	if (h.start > other.end || h.end < other.start) && !h.reverse {
+		return new(TimeInterval), 0
+	}
+
+	res := &TimeInterval{start: start, end: end, reverse: start > end}
+	return res, res.Duration()
+}
+
+func (h *TimeInterval) Duration() Minute {
+	if h == nil {
+		return 0
+	}
+
+	if h.reverse {
+		return minutesInDay - h.start + h.end
+	}
+	return h.end - h.start + 1
 }
 
 // Start return start of time interval.

@@ -25,7 +25,8 @@ func (srv *Controller) checkErr(c echo.Context, msg string, err error, fields ..
 		srv.log.Warn(msg, append(fieldErr.Fields(), fields...)...)
 		return c.JSON(fieldErr.CodeHTTP(), fieldErr.Data())
 	}
-	srv.log.Warn(msg, append(fields, zap.Error(err))...)
+
+	srv.log.Warn(msg, append(fields, zap.NamedError("checked_error", err))...)
 	return c.JSON(http.StatusBadRequest, model.BadRequestResponse{})
 }
 

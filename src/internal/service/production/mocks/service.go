@@ -36,6 +36,20 @@ func (m *MockStore) EXPECT() *MockStoreMockRecorder {
 	return m.recorder
 }
 
+// CompleteOrders mocks base method.
+func (m *MockStore) CompleteOrders(ctx context.Context, info []model.CompleteOrder) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CompleteOrders", ctx, info)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CompleteOrders indicates an expected call of CompleteOrders.
+func (mr *MockStoreMockRecorder) CompleteOrders(ctx, info interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteOrders", reflect.TypeOf((*MockStore)(nil).CompleteOrders), ctx, info)
+}
+
 // CreateCouriers mocks base method.
 func (m *MockStore) CreateCouriers(ctx context.Context, couriers []model.CreateCourierDTO) ([]model.CourierDTO, error) {
 	m.ctrl.T.Helper()
@@ -138,4 +152,19 @@ func (m *MockStore) GetOrders(ctx context.Context, limit, offset int) ([]*model.
 func (mr *MockStoreMockRecorder) GetOrders(ctx, limit, offset interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrders", reflect.TypeOf((*MockStore)(nil).GetOrders), ctx, limit, offset)
+}
+
+// GetOrdersByIDs mocks base method.
+func (m *MockStore) GetOrdersByIDs(ctx context.Context, ids []int64) ([]*model.OrderDTO, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrdersByIDs", ctx, ids)
+	ret0, _ := ret[0].([]*model.OrderDTO)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrdersByIDs indicates an expected call of GetOrdersByIDs.
+func (mr *MockStoreMockRecorder) GetOrdersByIDs(ctx, ids interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrdersByIDs", reflect.TypeOf((*MockStore)(nil).GetOrdersByIDs), ctx, ids)
 }

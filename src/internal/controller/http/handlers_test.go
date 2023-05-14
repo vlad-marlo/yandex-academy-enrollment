@@ -158,23 +158,38 @@ func TestController_HandleGetCourier_Positive(t *testing.T) {
 }
 
 func TestController_HandleGetCourier_Negative_ErrInService(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	srv := mocks.NewMockService(ctrl)
-	srv.EXPECT().GetCourierByID(gomock.Any(), fmt.Sprint(TestCourier1.CourierID)).Return(nil, errors.New(""))
-	s := testServer(t, srv)
-	r := httptest.NewRequest(http.MethodGet, "/", nil)
-	defer assert.NoError(t, r.Body.Close())
-	req := httptest.NewRecorder()
-	c := s.engine.NewContext(r, req)
-	c.SetParamNames("courier_id")
-	c.SetParamValues(fmt.Sprint(TestCourier1.CourierID))
-	if assert.NoError(t, s.HandleGetCourier(c)) {
-		res := req.Result()
-		defer assert.NoError(t, res.Body.Close())
-		assert.Equal(t, http.StatusNotFound, req.Code)
-		jsonCourier, err := json.Marshal(model.BadRequestResponse{})
-		require.NoError(t, err)
-		assert.JSONEq(t, string(jsonCourier), req.Body.String())
+	tt := []struct {
+		name string
+		err  error
+		code int
+		resp any
+	}{
+		{"unknown error", ErrUnknown, http.StatusBadRequest, model.BadRequestResponse{}},
+		{"unknown", ErrUnknown, http.StatusBadRequest, model.BadRequestResponse{}},
+		{"fielderr", fielderr.New("some msg", someData, fielderr.CodeNotFound), http.StatusNotFound, someData},
+		{"fielderr", fielderr.New("some msg", nil, fielderr.CodeNoContent), http.StatusNoContent, nil},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			srv := mocks.NewMockService(ctrl)
+			srv.EXPECT().GetCourierByID(gomock.Any(), fmt.Sprint(TestCourier1.CourierID)).Return(nil, tc.err)
+			s := testServer(t, srv)
+			r := httptest.NewRequest(http.MethodGet, "/", nil)
+			defer assert.NoError(t, r.Body.Close())
+			req := httptest.NewRecorder()
+			c := s.engine.NewContext(r, req)
+			c.SetParamNames("courier_id")
+			c.SetParamValues(fmt.Sprint(TestCourier1.CourierID))
+			if assert.NoError(t, s.HandleGetCourier(c)) {
+				res := req.Result()
+				defer assert.NoError(t, res.Body.Close())
+				assert.Equal(t, tc.code, req.Code)
+				jsonCourier, err := json.Marshal(tc.resp)
+				require.NoError(t, err)
+				assert.JSONEq(t, string(jsonCourier), req.Body.String())
+			}
+		})
 	}
 }
 

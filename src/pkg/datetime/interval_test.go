@@ -151,3 +151,168 @@ func TestTimeIntervalAlias_TimeInterval(t *testing.T) {
 		assert.Equal(t, tic.Reverse, ti.reverse)
 	}
 }
+
+func TestMin(t *testing.T) {
+	for x := 0; x != 1000; x++ {
+		for y := 0; y != 1000; y++ {
+			if x > y {
+				assert.Equal(t, y, min(x, y))
+				assert.Equal(t, x, max(x, y))
+			} else {
+				assert.Equal(t, x, min(x, y))
+				assert.Equal(t, y, max(x, y))
+			}
+		}
+	}
+}
+
+func TestTimeInterval_Common_Positive(t *testing.T) {
+	tt := []struct {
+		name    string
+		h       *TimeInterval
+		other   *TimeInterval
+		want    *TimeInterval
+		minutes Minute
+	}{
+		{
+			name: "non-reversed intervals with common time interval",
+			h: &TimeInterval{
+				start: 12 * 60,
+				end:   14*60 + 30,
+			},
+			other: &TimeInterval{
+				start: 13*60 + 30,
+				end:   15*60 + 30,
+			},
+			want: &TimeInterval{
+				start:   13*60 + 30,
+				end:     14*60 + 30,
+				reverse: false,
+			},
+			minutes: 61,
+		},
+		{
+			name: "no common interval",
+			h: &TimeInterval{
+				start: 0,
+				end:   1,
+			},
+			other: &TimeInterval{
+				start: 2,
+				end:   4,
+			},
+			want:    new(TimeInterval),
+			minutes: 0,
+		},
+		{
+			name: "only one common minute",
+			h: &TimeInterval{
+				start: 0,
+				end:   1,
+			},
+			other: &TimeInterval{
+				start: 1,
+				end:   2,
+			},
+			want: &TimeInterval{
+				start: 1,
+				end:   1,
+			},
+			minutes: 1,
+		},
+		{
+			name: "two reversed with collision",
+			h: &TimeInterval{
+				start:   1,
+				end:     0,
+				reverse: true,
+			},
+			other: &TimeInterval{
+				start:   2,
+				end:     1,
+				reverse: true,
+			},
+			want: &TimeInterval{
+				start:   2,
+				end:     0,
+				reverse: true,
+			},
+			minutes: minutesInDay - 2,
+		},
+		{
+			name: "two reversed with one collisions",
+			h: &TimeInterval{
+				start:   15,
+				end:     13,
+				reverse: true,
+			},
+			other: &TimeInterval{
+				start:   14,
+				end:     12,
+				reverse: true,
+			},
+			want: &TimeInterval{
+				start:   15,
+				end:     12,
+				reverse: true,
+			},
+			minutes: minutesInDay - 3,
+		},
+		{
+			name: "two reversed with no collisions",
+			h: &TimeInterval{
+				start:   15,
+				end:     13,
+				reverse: true,
+			},
+			other: &TimeInterval{
+				start:   14,
+				end:     12,
+				reverse: true,
+			},
+			want: &TimeInterval{
+				start:   15,
+				end:     12,
+				reverse: true,
+			},
+			minutes: minutesInDay - 3,
+		},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			got, minutes := tc.h.Common(tc.other)
+			assert.NotNil(t, got)
+			assert.Equal(t, tc.minutes, minutes)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}
+
+func TestTimeInterval_Common_Negative_NilReference(t *testing.T) {
+	assert.Panics(t, func() {
+		(*TimeInterval)(nil).Common(nil)
+	})
+	assert.Panics(t, func() {
+		(*TimeInterval)(nil).Common(new(TimeInterval))
+	})
+	assert.Panics(t, func() {
+		(&TimeInterval{}).Common(nil)
+	})
+}
+
+func TestTimeInterval_Duration(t *testing.T) {
+	tt := []struct {
+		name     string
+		interval *TimeInterval
+		want     Minute
+	}{
+		{"nil interval", nil, 0},
+		{"reversed interval", &TimeInterval{14, 13, true}, minutesInDay - 1},
+		{"non reversed", &TimeInterval{13, 14, false}, 2},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, tc.interval.Duration())
+		})
+	}
+}

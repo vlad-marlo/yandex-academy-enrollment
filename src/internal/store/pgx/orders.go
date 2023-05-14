@@ -25,3 +25,13 @@ func (s *Store) GetCompletedOrdersPriceByCourier(_ context.Context, id int64, st
 	//TODO implement me
 	panic("implement me")
 }
+
+func (s *Store) CompleteOrders(ctx context.Context, info []model.CompleteOrder) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s *Store) GetOrdersByIDs(ctx context.Context, ids []int64) ([]*model.OrderDTO, error) {
+	//TODO implement me
+	panic("implement me")
+}

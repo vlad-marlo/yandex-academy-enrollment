@@ -24,11 +24,17 @@ func (srv *Controller) HandlePing(c echo.Context) error {
 //	@Router		/couriers/{courier_id} [get]
 func (srv *Controller) HandleGetCourier(c echo.Context) error {
 	id := c.Param("courier_id")
+	courierIDField := zap.String("courier-id", id)
+
+	srv.log.Debug("starting handling getting courier by id", courierIDField)
+
 	courier, err := srv.srv.GetCourierByID(c.Request().Context(), id)
 	if err != nil {
-		srv.log.Warn("error while getting courier by id", zap.String("courier-id", id), zap.Error(err))
-		return c.JSON(http.StatusNotFound, model.BadRequestResponse{})
+		srv.log.Warn("error while getting courier by id", courierIDField, zap.Error(err))
+		return srv.checkErr(c, "error while getting courier by id", err)
 	}
+	srv.log.Debug("successful got courier by id", courierIDField)
+
 	return c.JSON(http.StatusOK, courier)
 }
 
@@ -45,9 +51,16 @@ func (srv *Controller) HandleGetCourier(c echo.Context) error {
 //	@Router		/couriers/ [get]
 func (srv *Controller) HandleGetCouriers(c echo.Context) error {
 	opts := GetPaginationOptsFromRequest(c)
+
+	fields := []zap.Field{
+		zap.Int("limit", opts.Limit()),
+		zap.Int("offset", opts.Offset()),
+	}
+	srv.log.Debug("handling get couriers", fields...)
+
 	resp, err := srv.srv.GetCouriers(c.Request().Context(), opts)
 	if err != nil {
-		return srv.checkErr(c, "err while getting response", err, zap.Any("pagination_opts", opts))
+		return srv.checkErr(c, "err while getting response", err, fields...)
 	}
 	return c.JSON(http.StatusOK, resp)
 }
