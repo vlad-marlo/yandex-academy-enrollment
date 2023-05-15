@@ -167,7 +167,7 @@ func TestMin(t *testing.T) {
 }
 
 func TestTimeInterval_Common_Positive(t *testing.T) {
-	tt := []struct {
+	var tt = []struct {
 		name    string
 		h       *TimeInterval
 		other   *TimeInterval
@@ -276,6 +276,56 @@ func TestTimeInterval_Common_Positive(t *testing.T) {
 				reverse: true,
 			},
 			minutes: minutesInDay - 3,
+		},
+		{
+			name: "one reversed",
+			h: &TimeInterval{
+				start:   15,
+				end:     13,
+				reverse: true,
+			},
+			other: &TimeInterval{
+				start: 10,
+				end:   13,
+			},
+			want: &TimeInterval{
+				start:   10,
+				end:     13,
+				reverse: false,
+			},
+			minutes: 4,
+		},
+		{
+			name: "one reversed #2",
+			other: &TimeInterval{
+				start:   15,
+				end:     13,
+				reverse: true,
+			},
+			h: &TimeInterval{
+				start: 10,
+				end:   13,
+			},
+			want: &TimeInterval{
+				start:   10,
+				end:     13,
+				reverse: false,
+			},
+			minutes: 4,
+		},
+		{
+			name: "one reversed and has two collisions",
+			other: &TimeInterval{
+				start:   15,
+				end:     13,
+				reverse: true,
+			},
+			h: &TimeInterval{
+				start: 10,
+				end:   16,
+			},
+			want:    &TimeInterval{},
+			minutes: 0,
 		},
 	}
 	for _, tc := range tt {

@@ -2,9 +2,6 @@ package migrator
 
 import (
 	"context"
-	"errors"
-	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/vlad-marlo/yandex-academy-enrollment/pkg/pgx"
 	"github.com/vlad-marlo/yandex-academy-enrollment/pkg/retryer"
 	"time"
@@ -35,8 +32,8 @@ var (
 		`CREATE TABLE IF NOT EXISTS courier_working_hour
 (
     id         BIGSERIAL PRIMARY KEY UNIQUE NOT NULL,
-    start_time INTEGER DEFAULT 0            NOT NULL,
-    end_time   INTEGER DEFAULT 0            NOT NULL,
+    start_time INT4    DEFAULT 0::INT4      NOT NULL,
+    end_time   INT4    DEFAULT 0::INT4      NOT NULL,
     reversed   BOOLEAN DEFAULT FALSE        NOT NULL,
     courier_id BIGINT                       NOT NULL,
     CONSTRAINT courier_fk FOREIGN KEY (courier_id) REFERENCES couriers
@@ -58,13 +55,30 @@ var (
 		`CREATE TABLE IF NOT EXISTS orders_delivery_hours
 (
     id         BIGSERIAL PRIMARY KEY UNIQUE NOT NULL,
-    start_time INTEGER DEFAULT 0            NOT NULL,
-    end_time   INTEGER DEFAULT 0            NOT NULL,
+    start_time INT4    DEFAULT 0::INT4      NOT NULL,
+    end_time   INT4    DEFAULT 0::INT4      NOT NULL,
     reversed   BOOLEAN DEFAULT FALSE        NOT NULL,
     order_id   BIGINT                       NOT NULL,
     CONSTRAINT order_fk FOREIGN KEY (order_id) REFERENCES orders (id)
 );`,
+		`CREATE TABLE IF NOT EXISTS order_group
+(
+    id      BIGSERIAL PRIMARY KEY UNIQUE NOT NULL,
+    date    VARCHAR(10)                  NOT NULL,
+    courier BIGINT                       NOT NULL,
+    CONSTRAINT courier_fk FOREIGN KEY (courier) REFERENCES couriers MATCH FULL ON DELETE CASCADE,
+    CONSTRAINT courier_date_unique UNIQUE (date, courier)
+);`,
 	}
+	migrateDown = []string{
+		`DROP TABLE IF EXISTS order_group;`,
+		`DROP TABLE IF EXISTS orders_delivery_hours;`,
+		`DROP TABLE IF EXISTS orders;`,
+		`DROP TABLE IF EXISTS courier_working_hour;`,
+		`DROP TABLE IF EXISTS courier_region;`,
+		`DROP TABLE IF EXISTS couriers;`,
+	}
+	Migrations = len(migrations)
 )
 
 func Migrate(cli pgx.Client) (int, error) {
@@ -78,12 +92,24 @@ func Migrate(cli pgx.Client) (int, error) {
 			migrationRetryAttempts,
 			migrationsRetryDelay,
 		); err != nil {
-			var pgErr *pgconn.PgError
-			if errors.As(err, &pgErr) {
-				if pgErr.Code == pgerrcode.InvalidColumnDefinition {
-					continue
-				}
-			}
+			return i, err
+		}
+		i++
+	}
+	return i, nil
+}
+
+func MigrateDown(cli pgx.Client) (int, error) {
+	i := 0
+	for _, migration := range migrateDown {
+		if err := retryer.TryWithAttempts(
+			func() error {
+				_, err := cli.P().Exec(context.Background(), migration)
+				return err
+			},
+			migrationRetryAttempts,
+			migrationsRetryDelay,
+		); err != nil {
 			return i, err
 		}
 		i++

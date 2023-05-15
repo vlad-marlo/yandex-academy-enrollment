@@ -1,12 +1,14 @@
 package client
 
 import (
+	"context"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/vlad-marlo/yandex-academy-enrollment/internal/config"
 	"go.uber.org/fx/fxtest"
 	"go.uber.org/zap"
+	"os"
 	"testing"
 )
 
@@ -59,4 +61,27 @@ func TestNew_Negative_BadConfig(t *testing.T) {
 	cli, err := New(lc, badCfg{}, zap.L())
 	assert.Nil(t, cli)
 	assert.Error(t, err)
+}
+
+func TestNewTest_DefaultClient(t *testing.T) {
+	cli, td := NewTest(t)
+	defer td()
+	assert.NoError(t, cli.pool.Ping(context.Background()))
+}
+
+func TestNewTest_BadClient(t *testing.T) {
+	require.NoError(t, os.Setenv("TEST_DB_URI", "postgres://postgres:password@localhost:5432/unknonnnonnononnnononno"))
+	_, _ = NewTest(t)
+	t.Log("test is unexpectedly was not skipped")
+	t.Fail()
+}
+
+func TestTD(t *testing.T) {
+	td := teardown(&pgxpool.Pool{}, "")
+	assert.Panics(t, td)
+}
+
+func TestBadCli(t *testing.T) {
+	cli := BadCli(t)
+	assert.Error(t, cli.P().Ping(context.Background()))
 }

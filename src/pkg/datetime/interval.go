@@ -37,8 +37,8 @@ func max[T constraints.Integer | constraints.Float](a, b T) T {
 //
 // It must be used only and only then you need to create TimeInterval with some data.
 type TimeIntervalAlias struct {
-	Start   int
-	End     int
+	Start   int32
+	End     int32
 	Reverse bool
 }
 
@@ -113,11 +113,11 @@ func (h *TimeInterval) calculateCommonForReversed(other *TimeInterval) (*TimeInt
 	if !h.reverse {
 		return other.calculateCommonForReversed(h)
 	}
-	if h.start >= other.end && h.end <= other.start {
+	if h.start <= other.end && h.end >= other.start {
 		return new(TimeInterval), 0
 	}
 
-	start := max(h.end, other.start)
+	start := min(h.end, other.start)
 	end := min(h.start, other.end)
 
 	res := &TimeInterval{start: start, end: end, reverse: start > end}
@@ -159,7 +159,7 @@ func (h *TimeInterval) Duration() Minute {
 // If pointer receiver is nil object then will be returned zero time.
 func (h *TimeInterval) Start() (t Minute) {
 	if h == nil {
-		return
+		return 0
 	}
 	return h.start
 }
@@ -169,7 +169,7 @@ func (h *TimeInterval) Start() (t Minute) {
 // If pointer receiver is nil object then will be returned zero time.
 func (h *TimeInterval) End() (t Minute) {
 	if h == nil {
-		return
+		return 0
 	}
 	return h.end
 }

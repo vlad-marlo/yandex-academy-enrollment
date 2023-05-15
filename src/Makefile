@@ -1,3 +1,5 @@
+include .env
+
 .DEFAULT_GOAL := build
 
 .PHONY: build
@@ -14,12 +16,16 @@ gen:
 test:
 	go test ./... -v -coverpkg=./internal/...,./pkg/... -coverprofile=coverage.out
 
+.PHONY: testshort
+testshort:
+	go test ./... -v -test.short=true -coverpkg=./internal/...,./pkg/... -coverprofile=coverage.out
+
 .PHONY: c
 c:
 	go tool cover -func coverage.out
 
 .PHONY: tc
-tc: test c
+tc: testshort c
 
 .PHONY: lines
 lines:

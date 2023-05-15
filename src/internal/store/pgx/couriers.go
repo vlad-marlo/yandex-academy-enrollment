@@ -4,24 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/vlad-marlo/yandex-academy-enrollment/pkg/datetime"
 	"github.com/vlad-marlo/yandex-academy-enrollment/pkg/model"
-	"go.uber.org/multierr"
+	"go.uber.org/zap"
 )
 
 // getCourierRegions return slice of regions of courier with provided id.
 func (s *Store) getCourierRegions(ctx context.Context, id int64) (r []int32, err error) {
 	var rows pgx.Rows
 
+	r = make([]int32, 0, 3)
+
 	rows, err = s.pool.Query(ctx, `SELECT x.region FROM courier_region x WHERE x.courier_id = $1;`, id)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return []int32{}, nil
-		}
-
 		return nil, fmt.Errorf("err while doing query: %w", err)
 	}
 	defer rows.Close()
@@ -36,9 +32,10 @@ func (s *Store) getCourierRegions(ctx context.Context, id int64) (r []int32, err
 		r = append(r, i)
 	}
 
-	if err = rows.Err(); err != nil && !(errors.Is(err, pgx.ErrNoRows)) {
+	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("error from rows.Err() => %w", err)
 	}
+	zap.L().Error("error", zap.Error(err))
 
 	return r, nil
 }
@@ -46,13 +43,12 @@ func (s *Store) getCourierRegions(ctx context.Context, id int64) (r []int32, err
 func (s *Store) getCourierWorkingHours(ctx context.Context, id int64) (r []*datetime.TimeInterval, err error) {
 	var rows pgx.Rows
 
-	r = []*datetime.TimeInterval{}
+	r = make([]*datetime.TimeInterval, 0, 8)
 
-	rows, err = s.pool.Query(ctx, `SELECT x.start_time, x.end_time, x.reversed FROM courier_working_hour x WHERE x.courier_id = $1;`, id)
+	rows, err = s.pool.Query(ctx, `SELECT x.start_time, x.end_time, x.reversed
+FROM courier_working_hour x
+WHERE x.courier_id = $1;`, id)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return r, nil
-		}
 		return nil, fmt.Errorf("err while doing query: %w", err)
 	}
 	defer rows.Close()
@@ -60,7 +56,7 @@ func (s *Store) getCourierWorkingHours(ctx context.Context, id int64) (r []*date
 	var h datetime.TimeIntervalAlias
 
 	for rows.Next() {
-		if err = rows.Scan(h.Start, h.End, h.Reverse); err != nil {
+		if err = rows.Scan(&h.Start, &h.End, &h.Reverse); err != nil {
 			return nil, fmt.Errorf("error while scanning from rows: %w", err)
 		}
 
@@ -68,12 +64,6 @@ func (s *Store) getCourierWorkingHours(ctx context.Context, id int64) (r []*date
 	}
 
 	if err = rows.Err(); err != nil {
-		var pgErr *pgconn.PgError
-
-		if errors.Is(err, pgx.ErrNoRows) || (errors.As(err, &pgErr) && pgerrcode.IsNoData(pgErr.Code)) {
-			return r, nil
-		}
-
 		return nil, fmt.Errorf("error from rows.Err() => %w", err)
 	}
 
@@ -125,8 +115,8 @@ func (s *Store) addWorkingHoursToCourier(ctx context.Context, tx pgx.Tx, dto mod
 			ctx,
 			`INSERT INTO courier_working_hour(courier_id, start_time, end_time, reversed) VALUES ($1, $2, $3, $4);`,
 			dto.CourierID,
-			wh.Start(),
-			wh.End(),
+			int(wh.Start()),
+			int(wh.End()),
 			wh.Start() > wh.End(),
 		); err != nil {
 			return fmt.Errorf("err while adding courier regions: %w", err)
@@ -137,14 +127,13 @@ func (s *Store) addWorkingHoursToCourier(ctx context.Context, tx pgx.Tx, dto mod
 
 func (s *Store) createCourier(ctx context.Context, tx pgx.Tx, courier model.CreateCourierDTO) (model.CourierDTO, error) {
 	res := model.CourierDTO{
-		CourierID:    0,
 		CourierType:  courier.CourierType,
 		Regions:      courier.Regions,
 		WorkingHours: courier.WorkingHours,
 	}
 	if err := tx.QueryRow(
 		ctx,
-		`insert into couriers(courier_type) values ($1) returning id;`,
+		`INSERT INTO couriers(courier_type) VALUES ($1) RETURNING id;`,
 		courier.CourierType,
 	).Scan(&res.CourierID); err != nil {
 		return model.CourierDTO{}, err
@@ -166,7 +155,9 @@ func (s *Store) CreateCouriers(ctx context.Context, couriers []model.CreateCouri
 	if err != nil {
 		return nil, fmt.Errorf("unable to start transaction: check drivers: %w", err)
 	}
-	defer multierr.AppendInto(&err, tx.Rollback(ctx))
+	defer func() {
+		s.log.Error("tx rollback", zap.NamedError("tx_error", tx.Rollback(ctx)))
+	}()
 	r = make([]model.CourierDTO, 0, len(couriers))
 
 	var c model.CourierDTO
