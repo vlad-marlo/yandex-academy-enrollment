@@ -1,0 +1,537 @@
+definitions:
+  model.BadRequestResponse:
+    type: object
+  model.CompleteOrder:
+    properties:
+      complete_time:
+        type: string
+      courier_id:
+        type: integer
+      order_id:
+        type: integer
+    required:
+    - complete_time
+    - courier_id
+    - order_id
+    type: object
+  model.CompleteOrderRequest:
+    properties:
+      complete_info:
+        items:
+          $ref: '#/definitions/model.CompleteOrder'
+        type: array
+    required:
+    - complete_info
+    type: object
+  model.CourierDTO:
+    properties:
+      courier_id:
+        example: 2
+        type: integer
+      courier_type:
+        enum:
+        - FOOT
+        - BIKE
+        - AUTO
+        example: AUTO
+        type: string
+      regions:
+        example:
+        - 1
+        - 2
+        - 3
+        items:
+          type: integer
+        type: array
+      working_hours:
+        description: |-
+          WorkingHours is string slice of strings that represents time interval.
+
+          String must be in HH:MM-HH:MM format where HH is hour (integer 0-23) and MM is minutes (integer 0-59).
+        example:
+        - 12:00-23:00
+        - 14:30-15:30
+        items:
+          type: string
+        type: array
+    required:
+    - courier_id
+    - courier_type
+    - regions
+    - working_hours
+    type: object
+  model.CourierGroupOrders:
+    properties:
+      courier_id:
+        type: integer
+      orders:
+        items:
+          $ref: '#/definitions/model.GroupOrders'
+        type: array
+    type: object
+  model.CouriersCreateResponse:
+    properties:
+      couriers:
+        items:
+          $ref: '#/definitions/model.CourierDTO'
+        type: array
+    type: object
+  model.CreateCourierDTO:
+    properties:
+      courier_type:
+        enum:
+        - FOOT
+        - BIKE
+        - AUTO
+        example: AUTO
+        type: string
+      regions:
+        example:
+        - 1
+        - 2
+        - 3
+        items:
+          type: integer
+        type: array
+      working_hours:
+        example:
+        - 12:00-23:00
+        - 14:30-15:30
+        items:
+          type: string
+        type: array
+    required:
+    - courier_type
+    - regions
+    - working_hours
+    type: object
+  model.CreateCourierRequest:
+    properties:
+      couriers:
+        items:
+          $ref: '#/definitions/model.CreateCourierDTO'
+        type: array
+    required:
+    - couriers
+    type: object
+  model.CreateOrderDTO:
+    properties:
+      cost:
+        type: integer
+      delivery_hours:
+        description: |-
+          DeliveryHours is string slice of strings that represents time interval.
+
+          String must be in HH:MM-HH:MM format where HH is hour (integer 0-23) and MM is minutes (integer 0-59).
+        items:
+          type: string
+        type: array
+      regions:
+        type: integer
+      weight:
+        type: number
+    required:
+    - cost
+    - delivery_hours
+    - regions
+    - weight
+    type: object
+  model.CreateOrderRequest:
+    properties:
+      orders:
+        items:
+          $ref: '#/definitions/model.CreateOrderDTO'
+        type: array
+    required:
+    - orders
+    type: object
+  model.GetCourierMetaInfoResponse:
+    properties:
+      courier_id:
+        example: 1
+        type: integer
+      courier_type:
+        enum:
+        - FOOT
+        - BIKE
+        - AUTO
+        example: AUTO
+        type: string
+      earnings:
+        type: integer
+      rating:
+        type: integer
+      regions:
+        example:
+        - 1
+        - 3
+        - 6
+        items:
+          type: integer
+        type: array
+      working_hours:
+        description: |-
+          WorkingHours is string slice of strings that represents time interval.
+
+          String must be in HH:MM-HH:MM format where HH is hour (integer 0-23) and MM is minutes (integer 0-59).
+        example:
+        - 12:00-23:00
+        - 14:30-15:30
+        items:
+          type: string
+        type: array
+    required:
+    - courier_id
+    - courier_type
+    - regions
+    - working_hours
+    type: object
+  model.GetCouriersResponse:
+    properties:
+      couriers:
+        items:
+          $ref: '#/definitions/model.CourierDTO'
+        type: array
+      limit:
+        type: integer
+      offset:
+        type: integer
+    type: object
+  model.GroupOrders:
+    properties:
+      group_order_id:
+        type: integer
+      orders:
+        items:
+          $ref: '#/definitions/model.OrderDTO'
+        type: array
+    required:
+    - orders
+    type: object
+  model.OrderAssignResponse:
+    properties:
+      couriers:
+        items:
+          $ref: '#/definitions/model.CourierGroupOrders'
+        type: array
+      date:
+        type: string
+    type: object
+  model.OrderDTO:
+    properties:
+      completed_time:
+        type: string
+      cost:
+        type: integer
+      delivery_hours:
+        description: |-
+          DeliveryHours is string slice of strings that represents time interval.
+
+          String must be in HH:MM-HH:MM format where HH is hour (integer 0-23) and MM is minutes (integer 0-59).
+        items:
+          type: string
+        type: array
+      order_id:
+        type: integer
+      regions:
+        type: integer
+      weight:
+        type: number
+    required:
+    - cost
+    - delivery_hours
+    - order_id
+    - regions
+    - weight
+    type: object
+info:
+  contact: {}
+  title: Yandex Lavka
+  version: "1.0"
+paths:
+  /couriers/:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Максимальное количество курьеров в выдаче. Если параметр не передан,
+          то значение по умолчанию равно 1.
+        in: query
+        name: limit
+        type: integer
+      - description: Количество курьеров, которое нужно пропустить для отображения
+          текущей страницы. Если параметр не передан, то значение по умолчанию равно
+          0.
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.GetCouriersResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BadRequestResponse'
+      summary: Получение профилей курьеров
+      tags:
+      - courier-controller
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Couriers
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateCourierRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.CouriersCreateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BadRequestResponse'
+      summary: Создание профилей курьеров
+      tags:
+      - courier-controller
+  /couriers/{courier_id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Courier identifier
+        in: path
+        name: courier_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.CourierDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BadRequestResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.BadRequestResponse'
+      summary: Получение профиля курьера
+      tags:
+      - courier-controller
+  /couriers/assignments:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Идентификатор курьера для получения списка распредленных заказов.
+          Если не указан, возвращаются данные по всем курьерам.
+        in: query
+        name: courier_id
+        type: integer
+      - description: Дата распределения заказов. Если не указана, то используется
+          текущий день
+        in: query
+        name: date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.OrderAssignResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BadRequestResponse'
+      summary: список распределенных заказов
+      tags:
+      - courier-controller
+  /couriers/meta-info/{courier_id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Courier identifier
+        in: path
+        name: courier_id
+        required: true
+        type: integer
+      - description: Максимальное количество курьеров в выдаче. Если параметр не передан,
+          то значение по умолчанию равно 1.
+        in: query
+        name: startDate
+        required: true
+        type: string
+      - description: Количество курьеров, которое нужно пропустить для отображения
+          текущей страницы. Если параметр не передан, то значение по умолчанию равно
+          0.
+        in: query
+        name: endDate
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.GetCourierMetaInfoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BadRequestResponse'
+      summary: Получение meta-информации о курьере.
+      tags:
+      - courier-controller
+  /orders/:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Максимальное количество заказов в выдаче. Если параметр не передан,
+          то значение по умолчанию равно 1.
+        in: query
+        name: limit
+        type: integer
+      - description: Количество заказов, которое нужно пропустить для отображения
+          текущей страницы. Если параметр не передан, то значение по умолчанию равно
+          0.
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.OrderDTO'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BadRequestResponse'
+      summary: Получение заказов
+      tags:
+      - order-controller
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Orders
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.OrderDTO'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BadRequestResponse'
+      summary: Создание заказов
+      tags:
+      - order-controller
+  /orders/{order_id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Order identifier
+        in: path
+        name: order_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.OrderDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BadRequestResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.BadRequestResponse'
+      summary: Получение информации о заказе
+      tags:
+      - order-controller
+  /orders/assign:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Дата распределения заказов. Если не указана, то используется
+          текущий день
+        in: query
+        name: date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.OrderAssignResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BadRequestResponse'
+      summary: Распределение заказов по курьерам
+      tags:
+      - order-controller
+  /orders/complete:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Orders
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.CompleteOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.OrderDTO'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BadRequestResponse'
+      summary: Завершение заказов
+      tags:
+      - order-controller
+swagger: "2.0"
